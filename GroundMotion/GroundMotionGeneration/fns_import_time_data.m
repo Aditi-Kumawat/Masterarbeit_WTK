@@ -18,7 +18,7 @@ function data = fns_import_time_data(file_path,data_type, plot_)
     end
 
     if plot_ 
-        figure
+        figure;
         plot(time,ampl);
         title('Import Data');
         xlabel('time');
