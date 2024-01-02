@@ -1,4 +1,20 @@
 function [data,Fs] = fns_fft_data(time_data_table,cut_off_freq,check_IFFT,plot_)
+%% FFT, transfrom data to frequency domain
+    %% Input
+    %   1. Input data: the data type should be table with size [N,2],
+    %      N is the length of time series. Could be extract from function: 
+    %      fns_import_time_domain().
+    %   2. CutOffFreq: It should be half of the Sampling Rate, 
+    %                  CutOffFreq = Fs/2. If CutOffFreq < Fs/2, then it
+    %                  will be treated as applying low pass filter on the
+    %                  signal.
+    %   3. Check_IFFT: bool. if = true, then if will show its IFFT result
+    %                  and original data for comparison. One can use this
+    %                  to check the effect of cut_off_freq.
+    %   4. plot_     : bool, plot data in frequency domain or not.
+    %% Output
+    %   1. table: [Freq,Real,Imag,Amplitude,Complex]. 
+
     time = time_data_table.time;
     ampl = time_data_table.ampl;
     L = length(ampl);

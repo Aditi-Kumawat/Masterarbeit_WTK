@@ -54,7 +54,7 @@ function [T,Spa,Spv,Sd] = fns_response_spectra(dt,Ag,zet,g,endp)
     end
     Ag(end)=[];
     T(end)=[];
-    Sd(2,1)=0; Spv(1:2,1)=0;Spa(1:2,1)=max(abs(Ag))/g;
+    Sd(2,1)=0; Spv(1:2,1)=0; Spa(1:2,1)=max(abs(Ag))/g;
     %%% Plot Spectra
     %subplot(2,1,1)
     % %figure('Name','Spectral Displacement','NumberTitle','off')

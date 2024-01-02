@@ -1,4 +1,57 @@
 classdef cls_GM_generator
+%% Ground Motion Generator
+    %% Initialization: 
+    % 1. Input data: the data type should be table with size [N,2],
+    %    N is the length of time series. Could be extract from function: 
+    %    fns_import_time_domain().
+    % 2. CutOffFreq: It should be half of the Sampling Rate, 
+    %                CutOffFreq = Fs/2.
+    %% Method:
+    % 1.generateWhiteNoise(plot_):
+    %   Generating Gaussain White Noise.
+    %   Input:
+    %       1. plot_: bool. Plot the white noise in time domain.
+    %   Output:
+    %       1. Table: (time,amplitude), size [N,2].
+    %
+    % 2.generateStaPesudoGM(GM_model,init_Guess,S_init,domain_type,show_info_, plot_)
+    %   Generate Simulated Stationary Ground Motion. 
+    %   Input:
+    %       1.GM_model:  if "KT" = Kanai-Tajimi model.
+    %                    if "CP" = Clough-Penzien model.
+    %                    if "Hu" = Hu-Zhou model.
+    %       2.GM_params: if "KT", parameters should be [Omega_g, Damping_g]; 
+    %                    if "CP", parameters should be [Omega_g, Damping_g, Omega_c, Damping_c];
+    %                    if "Hu", parameters should be [Omega_g, Damping_g, Omega_c];
+    %                    Good Guess: Omega_g = arg(max(Amplitude_freq)),
+    %                                Damping_g = 0.3,
+    %                                Omega_c = Omega_g/5,
+    %                                Damping_g = 0.3.  
+    %       3.S_init: Peak Ground Acceleration (m/s^2). if [], then using
+    %                 the PGA of recorded ground motion.
+    %       4.domain_type: 'time' or 'freq' 
+    %       5.show_info_ and plot_: bool.
+    %   Output:
+    %       1. if domain_type = 'time', output Table: (time,amplitude), size [N,2].
+    %          if domain_type = 'freq', output Table: (freq,complexvalue), size [N,2].
+    %   Reference: Chen (2022) Power spectral models of stationary earthquake-induced ground
+    %              motion process considering site characteristics
+    %
+    % 3.generateTimeNonStaPesudoGM(GM_model,init_Guess,S_init,AriasIntensity,energy_corrected_bool,show_info_, plot_)
+    %   Generate Simulated non-Stationary Ground Motion. (Only Time non-stationary).
+    %   Input:
+    %       1. GM_model, init_Guess, S_init: same as parameters for obj.generateStaPesudoGM()
+    %       2. AriasIntensity: Arias Intensity = pi*trapz(power(Amplitude_t,2))/(2*9.81);
+    %                          if [], then automatically compute from recorded Ground motion.
+    %       3. energy_corrected_bool: bool, if true, then it will automatically
+    %                                 compute then scale the generated ground
+    %                                 motion. if false, then factor = 1.
+    %                                 Reference:  Broccardo (2017) A spectral-based stochastic ground motion model
+    %                                             with a non-parametric time-modulating function
+    %       4. show_info_ and plot_: bool.
+    %   Output: 
+    %       1. output Table: (time,amplitude), size [N,2].
+        
     properties
         Time;
         Ampl_t;
@@ -52,7 +105,7 @@ classdef cls_GM_generator
             % Generate white Gaussian noise
             noise = mean_value + std_deviation * randn(1,length(obj.Time));
 
-            % Design a low-pass filter with a cutoff frequency of 100 Hz
+            % Design a low-pass filter with a cutoff frequency
             cutoff_frequency = obj.CutOffFreq / (0.5 * obj.Fs)-0.01; % Normalize the cutoff frequency
             filter_order = 50;
             low_pass_filter = fir1(filter_order, cutoff_frequency);
@@ -72,25 +125,32 @@ classdef cls_GM_generator
             end
         end
 
-        function output_GM = generateStaPesudoGM(obj,GM_model,init_Guess,domain_type,show_info_, plot_)
+        function output_GM = generateStaPesudoGM(obj,GM_model,init_Guess,S_init,domain_type,show_info_, plot_)
             domain_type_list = {'time','freq'};
             if ~ismember(domain_type,  domain_type_list)
                 fprintf('ERROR! Wrong input type, please input one of the type: [%s]\n', strjoin(data_type_list, ', '));
             end
 
-            if nargin < 5
+            if nargin < 6
                 show_info_ = false;
             end
 
-            if nargin < 6
+            if nargin < 7
                 plot_ = false;
             end            
-
+            
+            %Fitting model
             coeffs = fit_GM_model(obj,GM_model,init_Guess,show_info_,false);
-            filter = GMmodel(obj,GM_model,coeffs);
+            if isempty(S_init)
+                filter = GMmodel(obj,GM_model,coeffs,[]);
+            else
+                filter = GMmodel(obj,GM_model,coeffs,S_init);
+            end
+            %Generate FRF
             FRF = sqrt(filter/obj.PGA);
             norm_FRF = FRF;
 
+            %Generate white noise
             noise = obj.generateWhiteNoise;
             noise_FFT = fft(noise);
             P1 = noise_FFT(1:floor(length(noise)/2+1));
@@ -105,8 +165,8 @@ classdef cls_GM_generator
                     error('Lengths of Freq and Noise_FFT are not equal.');
                 end
 
+                %Generate ground motion by appling FRF on white noise.
                 PesudoGM_freq = transpose(P1).*norm_FRF;
-
 
                 if strcmp(domain_type,'freq')
                     output_GM = table(freq,cmplx);
@@ -127,6 +187,7 @@ classdef cls_GM_generator
                 end
                 
                 if strcmp(domain_type,'time')
+                    %IFFT transform back to time domain.
                     L = length(noise);
                     P1_pad = [PesudoGM_freq; conj(flipud(PesudoGM_freq(2:end-1,:)))];
                     P1_ifft = ifft(P1_pad*obj.Fs, L, 1, 'symmetric');
@@ -159,27 +220,47 @@ classdef cls_GM_generator
             
         end
 
-        function output_GM = generateTimeNonStaPesudoGM(obj,GM_model,init_Guess,energy_corrected_bool,show_info_, plot_)
-            if nargin < 5
-                show_info_ = false;
+        function output_GM = generateTimeNonStaPesudoGM(obj,GM_model,init_Guess,S_init,AriasIntensity,energy_corrected_bool,show_info_, plot_)
+            if isempty(AriasIntensity)
+                AriasIntensity = obj.AriasIntensity;
             end
 
             if nargin < 6
-                plot_ = false;
+                energy_corrected_bool = true;
+            end
+            
+            if nargin < 7
+                show_info_ = false;
             end
 
-            stationaryGM = generateStaPesudoGM(obj,GM_model,init_Guess,"time",show_info_, false);
+            if nargin < 8
+                plot_ = false;
+            end
+            
+            if isempty(S_init)
+                stationaryGM = generateStaPesudoGM(obj,GM_model,init_Guess,[],"time",show_info_, false);
+            else
+                stationaryGM = generateStaPesudoGM(obj,GM_model,init_Guess,S_init,"time",show_info_, false);
+            end
+            %Get Percentile from recorded ground motion.
             time_percentiles = getPercentileInfo(obj,false);
-            q = generateTimeModFunc(obj,time_percentiles,1,false);
+            %Generate Time Modulating Function.
+            q = generateTimeModFunc(obj,time_percentiles,AriasIntensity,1,false);
             
             time = obj.Time;
+            %Generate simulated ground motion
             ampl_ = q.*stationaryGM.ampl;
 
+            %Correct Arias Intensity or not (Broccardo, 2017)
             if energy_corrected_bool
                 simulate_AI = pi*trapz(power(ampl_,2))/(2*9.81);
-                energy_factor = obj.AriasIntensity/simulate_AI;
+
+                %Correct Energy
+                energy_factor = AriasIntensity/simulate_AI;
                 K = energy_factor*ones(length(ampl_),1);
-                q = generateTimeModFunc(obj,time_percentiles,energy_factor,false);
+
+                %Recompute the Time Modulating Function.
+                q = generateTimeModFunc(obj,time_percentiles,AriasIntensity,energy_factor,false);
                 ampl = q.*stationaryGM.ampl;           
                 output_GM = table(time,ampl,K);
             else
@@ -189,6 +270,15 @@ classdef cls_GM_generator
                 output_GM = table(time,ampl,K);
             end
 
+            if show_info_
+                disp('----------Time Modulating Function-----------');
+                disp(['AriasIntensity = ',num2str(AriasIntensity)]);
+                disp(['EnergyFactor,K = ',num2str(energy_factor)]);
+                disp(['Time   0.01%,P = ',num2str(time_percentiles(1)),' sec']);
+                disp(['Time      5%,P = ',num2str(time_percentiles(2)),' sec']);
+                disp(['Time     45%,P = ',num2str(time_percentiles(3)),' sec']);
+                disp(['Time     95%,P = ',num2str(time_percentiles(4)),' sec']);
+            end
 
             if plot_
                 figure;
@@ -217,13 +307,27 @@ classdef cls_GM_generator
             end
         end
 
-        function filter = GMmodel(obj,model_type,filter_para,plot_)
+        function filter = GMmodel(obj,model_type,filter_para,S_init,plot_)
+            %   1.model_type      : "KT" = Kanai-Tajimi model.
+            %                     : "CP" = Clough-Penzien model.
+            %                     : "Hu" = Hu-Zhou model.
+            %   2.filter_para     : if "KT", parameters should be [Omega_g, Damping_g]; 
+            %                     : if "CP", parameters should be [Omega_g, Damping_g, Omega_c, Damping_c];
+            %                     : if "Hu", parameters should be [Omega_g, Damping_g, Omega_c];
+            %   3.S_init          : Peak Ground Acceleration (m/s^2).
+            %   4.plot_           : Bool, plot or not.
+            %
+            %   Reference: Chen(2022),Power spectral models of stationary earthquake-induced ground
+            %                         motion process considering site characteristics
+
             model_type_list = {'Hu','KT','CP'};
             if ~ismember(model_type, model_type_list)
                 fprintf('ERROR! Wrong input type, please input one of the type: [%s]\n', strjoin(data_type_list, ', '));
             end
             
-            S_init = obj.PGA;
+            if nargin < 4 || isempty(S_init)
+                S_init = obj.PGA;
+            end
 
             if strcmp(model_type,'Hu') 
                 Omega_g=filter_para(1);
@@ -249,7 +353,7 @@ classdef cls_GM_generator
                 filter = KTmodel(obj,Omega_g,Beta_g,S_init);
             end
 
-            if nargin < 4
+            if nargin < 5
                 plot_ = false;  
             end
 
@@ -462,7 +566,16 @@ classdef cls_GM_generator
             end
         end
 
-        function q = generateTimeModFunc(obj,time_percentiles,energy_factor,plot_)
+        function q = generateTimeModFunc(obj,time_percentiles,AriasIntensity,energy_factor,plot_)
+            if isempty(AriasIntensity)
+                AriasIntensity = obj.AriasIntensity;
+            end
+            
+            if isempty(energy_factor)
+                energy_factor = 1;  
+            end
+
+            
             % Given information
             t_45_percentile = time_percentiles(3)-time_percentiles(1);  % Time at which 45th percentile occurs
             total_duration = time_percentiles(4)-(time_percentiles(2)-time_percentiles(1));  % Total duration
@@ -482,7 +595,7 @@ classdef cls_GM_generator
 
             para_2 = 2*alpha-1;
             para_3 = 2*beta;
-            para_1 = sqrt(energy_factor.*obj.AriasIntensity*...
+            para_1 = sqrt(energy_factor.*AriasIntensity*...
                 power(para_3,para_2)/gamma(para_2));
             
             time = obj.Time(obj.Time<= obj.Time(end)-time_percentiles(1));
@@ -490,13 +603,13 @@ classdef cls_GM_generator
                 exp(-beta*time);
             q = [zeros(length(obj.Time)-length(time),1);q];
             
-            if nargin < 3
+            if nargin < 5
                 plot_ = false;  
             end
             
             fitted_cdfgam = cumtrapz(q);
             norm_fitted_cdfgam = fitted_cdfgam/max(abs(fitted_cdfgam));
-            scale_fitted_cdfgam = norm_fitted_cdfgam*obj.AriasIntensity;
+            scale_fitted_cdfgam = norm_fitted_cdfgam*AriasIntensity;
             plot_time = obj.Time(obj.Time<=time_percentiles(4)+6);
 
             if plot_
@@ -557,7 +670,6 @@ classdef cls_GM_generator
             ylabel('Sxx');
             grid on;
         end
-
 
     end
 end
