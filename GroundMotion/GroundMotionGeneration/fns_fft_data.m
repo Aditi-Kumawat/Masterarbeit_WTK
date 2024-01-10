@@ -29,6 +29,7 @@ function [data,Fs] = fns_fft_data(time_data_table,cut_off_freq,check_IFFT,plot_)
         disp(['WARNING, The detacted Fs of import data is ',int2str(Fs),' Hz']);
         disp(['     Positive half of the frequency range (CutOffFreq) should be ',num2str(Fs/2)]);
         disp(['     Using current CutOffFreq ',num2str(cut_off_freq), ' might lead to data distortion.']);
+        cut_off_freq = round(Fs/2);
         f = 0:Fs/L:cut_off_freq;
         P1 = P2(1:floor(L/2+1));
         P1 = P1(1:length(f));

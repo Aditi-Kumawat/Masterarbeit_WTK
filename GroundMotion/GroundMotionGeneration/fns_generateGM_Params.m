@@ -1,4 +1,4 @@
-function output_GM = fns_generateGM_Params(seed,Time_array,CutOffFreq,GM_model,GM_params,S_init,Time_Percentiles,AriasIntensity,energy_factor) 
+function output_GM = fns_generateGM_Params(seed,Time_array,CutOffFreq,GM_model,GM_params,Time_Percentiles,AriasIntensity,energy_factor) 
 %% Generate Ground Motion By Input Paramter
     %% Input data:
     %   0.Seed            : Specific random seed, If [], then using 'shuffle'.
@@ -11,7 +11,7 @@ function output_GM = fns_generateGM_Params(seed,Time_array,CutOffFreq,GM_model,G
     %   4.GM_params       : if "KT", parameters should be [Omega_g, Damping_g]; 
     %                     : if "CP", parameters should be [Omega_g, Damping_g, Omega_c, Damping_c];
     %                     : if "Hu", parameters should be [Omega_g, Damping_g, Omega_c];
-    %   5.S_init          : Peak Ground Acceleration (m/s^2).
+    %   5.S_init          : 1 
     %   6.Time_Percentiles: Time Percentiles of ground motion = 
     %                       [sec(0.01%),sec(5%),sec(45%),sec(95%)].
     %   7.AriasIntensity  : Arias Intensity = pi*trapz(power(Amplitude_t,2))/(2*9.81);
@@ -37,17 +37,22 @@ function output_GM = fns_generateGM_Params(seed,Time_array,CutOffFreq,GM_model,G
     GMG = cls_GM_generator(pesuedoData_t, CutOffFreq);
 
     %Generate filter
+    S_init = 1;
     filter = GMG.GMmodel(GM_model,GM_params,S_init);
     FRF = sqrt(filter/S_init);
     norm_FRF = FRF;
     
+  
+
     %Generate White Noise and transform to Freq domain
     noise = GMG.generateWhiteNoise;
     noise_FFT = fft(noise);
     P1 = noise_FFT(1:floor(length(noise)/2+1));
+
     
     %Apply FRF on White Noise
     PesudoGM_freq = transpose(P1).*norm_FRF;
+
 
     %IFFT, transform to time domain
     L = length(noise);
@@ -55,10 +60,15 @@ function output_GM = fns_generateGM_Params(seed,Time_array,CutOffFreq,GM_model,G
     P1_ifft = ifft(P1_pad*GMG.Fs, L, 1, 'symmetric');
     data_IFFT = P1_ifft(1:L,:)/GMG.Fs;
     time = GMG.Time;
-    ampl = data_IFFT; 
+
+    %normalized 
+    original_variance = var(data_IFFT);
+    data_IFFT = data_IFFT/(sqrt(original_variance));%max(abs(data_IFFT));
+    ampl = data_IFFT - mean(data_IFFT);
+    ampl(1) = 0;
 
     %Generate Time Modulating Function, making it time non-stationary.
-    q = GMG.generateTimeModFunc(Time_Percentiles,AriasIntensity,energy_factor,false);
+    q = GMG.generateTimeModFunc(Time_Percentiles,[],AriasIntensity,energy_factor,false);
     ampl = q.*ampl; 
 
     %Output result
