@@ -2,10 +2,10 @@ clear;
 clc;
 close;
 
-dir = 'Y';
-file_name = ['Statistic_info_',dir,'_VaryS0.mat'];
+dir = 'X';
+file_name = ['Statistic_info_type2_',dir,'.mat'];
 path = load(file_name);
-data = path.statictic_info;
+data = path.statictic_info_type2;
 
 Spectral_info = data(:,2);
 Time_info = data(:,3);
@@ -15,7 +15,7 @@ i_len = Spectral_info{:,1};
 j_len = Time_info{:,1};
 k_len = GM_info{:,1};
 
-cd SAVE_FIGS\FIGS_HISTO_Y\
+cd SAVE_FIGS\FIGS_HISTO_X_type2\
 
 for i = 1:length(i_len)
     h = histogram(cellfun(@(x) x(i),Spectral_info),20);

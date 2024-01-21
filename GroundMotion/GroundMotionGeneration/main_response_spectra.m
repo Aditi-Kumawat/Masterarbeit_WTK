@@ -2,25 +2,23 @@ clear;
 clc;
 close;
 
-seed = 2;
-rng(seed);
-path = load('events.mat');
-all_path = path.file_list;
+path = load('MAT_FILES\Statistic_info_type1_X.mat');
+all_path = path.statictic_info_type1;
 
 %Parameter evaluation
 data_t = fns_import_time_data(all_path{12},'txt',[1,50]);
 GMG = cls_GM_generator(data_t, 100);
-[~,FRF_info,Time_info,GM_info] = GMG.generateTimeNonStaPesudoGMbyFit("Hu_S0",[200,0.01,0.5,GMG.PGA],[],[],false,false,true);
+[~,FRF_info,Time_info,GM_info] = GMG.generateTimeNonStaPesudoGMbyFit("Hu_S0",[200,0.01,0.5,GMG.PGA],[]);
 
 %Generate Pesuedo Ground Motioin based on those parameters
-PesuedoGM = fns_generateGM_Params(seed,data_t.time,100,"Hu_S0",...
+[time,ampl,vel,disp] = fns_generateGM_Params([],data_t.time,100,"Hu_S0",...
                           FRF_info,...
                           Time_info,...
-                          GMG.AriasIntensity,1);
+                          GMG.AriasIntensity);
 
 %Perfrom response spectra analysis
 [T_o,Spa_o,Spv_o,Sd_o] = fns_response_spectra(data_t.time(3)-data_t.time(2),data_t.ampl,5,9.81,10);
-[T_p,Spa_p,Spv_p,Sd_p] = fns_response_spectra(data_t.time(3)-data_t.time(2),PesuedoGM.ampl,5,9.81,10);
+[T_p,Spa_p,Spv_p,Sd_p] = fns_response_spectra(data_t.time(3)-data_t.time(2),ampl,5,9.81,10);
 
 %% Plot Spectra
 figure;

@@ -1,4 +1,4 @@
-function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_array,CutOffFreq,GM_model,GM_params,Time_Percentiles,AriasIntensity) 
+function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_array,CutOffFreq,GM_model,GM_params,Time_Percentiles,AriasIntensity,energy_factor) 
 %% Generate Ground Motion By Input Paramter
     %% Input data:
     %   0.Seed            : Specific random seed, If [], then using 'shuffle'.
@@ -15,6 +15,8 @@ function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_arr
     %   6.Time_Percentiles: Time Percentiles of ground motion = 
     %                       [sec(0.01%),sec(5%),sec(45%),sec(95%)].
     %   7.AriasIntensity  : Arias Intensity = pi*trapz(power(Amplitude_t,2))/(2*9.81);
+    %   8.energy_factor   : Scaling the Arias Intensity. This is used for
+    %                       matching specific ground motion. Defalut = 1. 
     %% Output data:
     %   1.output_GM       : Output table, time(var1) = Time series,
     %                                     ampl(var2) = Amplitude.
@@ -48,11 +50,12 @@ function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_arr
 
     %Generate filter
     S_init = 1;
-    GM_params = [GM_params,S_init];
-    filter = GMG.GMmodel(GM_model,GM_params);
+    filter = GMG.GMmodel(GM_model,GM_params,S_init);
     FRF = sqrt(filter/S_init);
     norm_FRF = FRF;
     
+  
+
     %Generate White Noise and transform to Freq domain
     noise = GMG.generateWhiteNoise;
     noise_FFT = fft(noise);
@@ -76,7 +79,7 @@ function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_arr
     ampl(1) = 0;
 
     %Generate Time Modulating Function, making it time non-stationary.
-    q = GMG.generateTimeModFunc(Time_Percentiles,[],AriasIntensity,false);
+    q = GMG.generateTimeModFunc(Time_Percentiles,[],AriasIntensity,energy_factor,false);
     ampl = q.*ampl; 
     
     %Baseline correction
