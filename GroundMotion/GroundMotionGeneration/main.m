@@ -8,15 +8,14 @@ addpath("BaselineCorrection\")
 %all_path = path.file_list;
 %data_t = fns_import_time_data(path,'txt',[1,25]);
 
-path = load('MAT_FILES\Statistic_info_type2_X.mat');
-all_path = path.statictic_info_type2;
-data_t = fns_import_time_data(all_path{11},'txt',[0,50]);
+path = load('MAT_FILES\Statistic_info_type1_X.mat');
+all_path = path.statictic_info_type1;
+data_t = fns_import_time_data(all_path{5},'txt',[0,50]);
 
 GMG = cls_GM_generator(data_t, 100);
 %time = GMG.getPercentileInfo(true);
 %q = GMG.generateTimeModFunc(time,[],[],1,true);
-[GM,FRF_info,Time_info,GM_info] = GMG.generateTimeNonStaPesudoGMbyFit("Hu_S0",[200,0.01,0.5,GMG.PGA],[],true,true);
-
+[GM,FRF_info,Time_info,GM_info] = GMG.generateTimeNonStaPesudoGMbyFit("Hu_S0",[200,0.01,0.5,GMG.PGA],[],false,true);
 
 
 %b = fns_fft_data(data_t,100,false,true);
@@ -55,28 +54,44 @@ GMG = cls_GM_generator(data_t, 100);
 %fns_fft_data(a,100,false,true);
 %
 
-%[time_,acc,vel,disp_] = fns_generateGM_Params(2,[],100,"Hu_S0",...
-%                          FRF_info,...
-%                          Time_info,...
-%                          GMG.AriasIntensity);
-%
+[time_,acc,vel,disp_] = fns_generateGM_Params(2,GM.time(GM.time<=30),100,"Hu_S0",...
+                          FRF_info,...
+                          Time_info,...
+                          GMG.AriasIntensity);
+
+ampl = GM.ampl(GM.time<=30);
+time = GM.time(GM.time<=30);
 %
 %
 %[vel, disp] = newmarkIntegrate(time, ampl, 0.5, 0.25);
 %[nomDR, nomAR] = computeDriftRatio(time, disp, 'ReferenceAccel', ampl);
 %[accel_A3, vel_A3, disp_A3] = baselineCorrection(time, ampl, 'AccelFitOrder', 3);
 %[A3DR, A3AR] = computeDriftRatio(time, disp_A3, 'ReferenceAccel', ampl);
-%GM = table(time,ampl);
-%fns_fft_data(GM,100,false,true)
-%vel_ = cumtrapz(time,acc);
-%dis = cumtrapz(time,vel_);
-%%
-%%
-%figure;
-%plot(time_,acc);
-%hold on 
-%plot(time,disp_A3,'--');
+vel_ = cumtrapz(time,ampl);
+dis = cumtrapz(time,vel_);
 
+
+figure;
+% Plot the first subplot
+subplot(2, 1, 1);
+
+plot(time_, acc, '-','LineWidth',1.);
+hold on 
+plot(time, ampl, '-.','LineWidth',1.);
+title('Acceleration');
+xlabel('t (sec)');
+ylabel('Acc(t)');
+legend('Baseline Correction', 'Original')
+
+% Plot the second subplot
+subplot(2, 1, 2);
+plot(time_, disp_, '-','LineWidth',1.);
+hold on 
+plot(time, dis, '-.','LineWidth',1.);
+title('Displacement');
+xlabel('t (sec)');
+ylabel('U(t)');
+legend('Baseline Correction', 'Original')
 %[T_o,Spa_o,Spv_o,Sd_o] = fns_response_spectra(data_t.time(3)-data_t.time(2),data_t.ampl,5,9.81,10);
 %[T_p,Spa_p,Spv_p,Sd_p] = fns_response_spectra(data_t.time(3)-data_t.time(2),acc,5,9.81,10);
 

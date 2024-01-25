@@ -159,8 +159,8 @@ classdef cls_GM_generator
             P1 = noise_FFT(1:floor(length(noise)/2+1));
             freq = obj.Fs*(0:(length(noise)/2))/length(noise);
 
-            %Generate FRF
-            FRF = sqrt(filter/coeffs(4));
+            %Generate Transfer function from FRF
+            FRF = sqrt(filter/coeffs(4)); % here is FRF is acutually the TF
             norm_FRF = FRF;
             
             try

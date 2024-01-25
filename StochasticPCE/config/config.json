@@ -1,0 +1,9 @@
+{
+    "X_path":"C:/Users/v196m/Desktop/master_project/Masterarbeit/StochasticPCE/InputData/samples_500.mat",
+    "X_type":{"x1": "Gaussian","x2": "Gaussian", "x3":"Uniform"},
+    "Z_type": [],
+
+    "max_poly_degree":5,
+    "q_norm":[0.25,0.5,0.75,1]
+	
+}

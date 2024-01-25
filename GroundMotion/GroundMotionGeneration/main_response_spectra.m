@@ -6,7 +6,7 @@ path = load('MAT_FILES\Statistic_info_type1_X.mat');
 all_path = path.statictic_info_type1;
 
 %Parameter evaluation
-data_t = fns_import_time_data(all_path{12},'txt',[1,50]);
+data_t = fns_import_time_data(all_path{11},'txt',[1,50]);
 GMG = cls_GM_generator(data_t, 100);
 [~,FRF_info,Time_info,GM_info] = GMG.generateTimeNonStaPesudoGMbyFit("Hu_S0",[200,0.01,0.5,GMG.PGA],[]);
 
