@@ -1,4 +1,4 @@
-function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_array,CutOffFreq,GM_model,GM_params,Time_Percentiles,AriasIntensity) 
+function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_array,CutOffFreq,GM_model,GM_params,Time_Percentiles,PGA) 
 %% Generate Ground Motion By Input Paramter
     %% Input data:
     %   0.Seed            : Specific random seed, If [], then using 'shuffle'.
@@ -19,20 +19,21 @@ function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_arr
     %   1.output_GM       : Output table, time(var1) = Time series,
     %                                     ampl(var2) = Amplitude.
     addpath('BaselineCorrection\');
+
+    %%Initialized Seed for White Noise
+    %if isempty(seed)
+    %    rng('shuffle');
+    %else
+    %    rng(seed);
+    %end
     
-    %Initialized Seed for White Noise
-    if isempty(seed)
-        rng('shuffle');
-    else
-        rng(seed);
-    end
-    
+
     %Initialized and generateing pesuedo Data_t 
     
     if ~isempty(Time_array)
         time = Time_array;
     else
-        time = transpose(0:0.005:20);
+        time = transpose(0:0.005:15);
     end
     
     check_size = size(time);
@@ -44,23 +45,21 @@ function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_arr
     pesuedoData_t = table(time,ampl);
     
     %Initialized class
-    GMG = cls_GM_generator(pesuedoData_t, CutOffFreq);
+    GMG = cls_GM_generator(seed,pesuedoData_t, CutOffFreq);
 
     %Generate filter
-    S_init = 1;
-    GM_params = [GM_params,S_init];
     filter = GMG.GMmodel(GM_model,GM_params);
-    FRF = sqrt(filter/S_init);
-    norm_FRF = FRF;
+    FRF = filter;
+
     
     %Generate White Noise and transform to Freq domain
     noise = GMG.generateWhiteNoise;
     noise_FFT = fft(noise);
     P1 = noise_FFT(1:floor(length(noise)/2+1));
-
     
     %Apply FRF on White Noise
-    PesudoGM_freq = transpose(P1).*norm_FRF;
+    PesudoGM_freq = transpose(P1).*FRF;
+    PesudoGM_freq(1:0) = 0;
 
     %IFFT, transform to time domain
     L = length(noise);
@@ -71,22 +70,18 @@ function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_arr
 
     %normalized 
     original_variance = var(data_IFFT);
-    data_IFFT = data_IFFT/(sqrt(original_variance));%max(abs(data_IFFT));
-    ampl = data_IFFT;% - mean(data_IFFT);
-    ampl(1) = 0;
+    data_IFFT = (data_IFFT - mean(data_IFFT))/(3*sqrt(original_variance));
+    ampl = PGA*data_IFFT;
 
     %Generate Time Modulating Function, making it time non-stationary.
-    q = GMG.generateTimeModFunc(Time_Percentiles,[],AriasIntensity,false);
-    ampl = q.*ampl; 
-    
-    %Baseline correction
-    [~, disp] = newmarkIntegrate(time, ampl, 0.5, 0.25);
-    [DR, AR] = computeDriftRatio(time, disp, 'ReferenceAccel', ampl);
-    
-    if DR>=0.05 || abs(AR-1)>=0.05
-        [accel_A3, vel_A3, disp_A3] = baselineCorrection(time, ampl, 'AccelFitOrder', 3);  
-        %[A3DR, A3AR] = computeDriftRatio(time, disp_A3, 'ReferenceAccel', ampl);
-    end
-    
+    q = GMG.generateTimeModFunc(Time_Percentiles,[]);
+    ampl = q.*ampl;
 
+    %Baseline correction
+    %[~, disp] = newmarkIntegrate(time, ampl, 0.5, 0.25);
+    %[DR, AR] = computeDriftRatio(time, disp, 'ReferenceAccel', ampl);
+    
+    [accel_A3, vel_A3, disp_A3] = baselineCorrection(time, ampl, 'AccelFitOrder', 3);  
+    %[A3DR, A3AR] = computeDriftRatio(time, disp_A3, 'ReferenceAccel', ampl);=
+    
 end

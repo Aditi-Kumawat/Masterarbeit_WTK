@@ -57,7 +57,7 @@ classdef cls_GM_generator
         Time;
         Ampl_t;
         PGA;
-
+        
         Freq;
         Real_f;
         Imag_f;
@@ -70,11 +70,12 @@ classdef cls_GM_generator
         Rad_Freq;
 
         PowerSpectrum;
-        AriasIntensity
+        AriasIntensity;
+        seed
     end
     
     methods
-        function obj = cls_GM_generator(data_t, cut_off_freq)
+        function obj = cls_GM_generator(seed,data_t, cut_off_freq)
 
             [data_f,Fs] = fns_fft_data(data_t,cut_off_freq);  
             obj.CutOffFreq = cut_off_freq;
@@ -94,9 +95,23 @@ classdef cls_GM_generator
             %                  = periodogram(obj.Ampl_t,[],obj.Freq,obj.Fs); 
             obj.PowerSpectrum = power(obj.Ampl_f,2);  
             obj.AriasIntensity = pi*trapz(power(obj.Ampl_t,2))/(2*9.81);
+
+            %Initialized Seed for White Noise
+            if isempty(seed)
+                obj.seed = -1;
+            else
+                obj.seed = seed;
+            end
+    
         end
     
         function noise = generateWhiteNoise(obj,plot_)
+            
+            if obj.seed == -1
+                rng('shuffle');
+            else
+                rng(obj.seed);
+            end
 
             if nargin < 2
                 plot_ = false;
@@ -138,16 +153,27 @@ classdef cls_GM_generator
             end            
             
             %Fitting model
+            [coeffs_1,~] = fit_GM_model(obj,GM_model,init_Guess);
             [coeffs,Flag] = fit_GM_model(obj,GM_model,init_Guess,show_info_,plot_);
+            disp(max(abs(coeffs_1 - coeffs)))
+            if max(abs(coeffs_1 - coeffs))>=0.1
+                Flag = 100;
+            end
             
             if strcmp(GM_model,'Hu_S0')
-                 if coeffs(3) >= 0.9
+                 if coeffs(3) >= 0.98
+                    [coeffs_1,~] = fit_GM_model(obj,'Hu_S0_NoContraint',init_Guess);
                     [coeffs,Flag] = fit_GM_model(obj,'Hu_S0_NoContraint',init_Guess,show_info_,plot_);
+                 end
+                 disp(max(abs(coeffs_1 - coeffs)))
+                 if max(abs(coeffs_1 - coeffs))>=0.1
+                    Flag = 100;
                  end
             end
 
+
             % if Flag ~= 1, not convegence
-            if Flag ~= 1
+            if Flag == 100
                coeffs(1) = -1; 
             end
 
@@ -160,8 +186,7 @@ classdef cls_GM_generator
             freq = obj.Fs*(0:(length(noise)/2))/length(noise);
 
             %Generate Transfer function from FRF
-            FRF = sqrt(filter/coeffs(4)); % here is FRF is acutually the TF
-            norm_FRF = FRF;
+            FRF = filter/coeffs(4);
             
             try
                 if length(FRF)~=length(P1)
@@ -173,7 +198,7 @@ classdef cls_GM_generator
                 end
 
                 %Generate ground motion by appling FRF on white noise.
-                PesudoGM_freq = transpose(P1).*norm_FRF;
+                PesudoGM_freq = transpose(P1).*FRF;
                 PesudoGM_freq(1:0) = 0;
 
                 %IFFT transform back to time domain.
@@ -184,25 +209,31 @@ classdef cls_GM_generator
                 time = obj.Time;
                 %normalized 
                 original_variance = var(data_IFFT);
-                data_IFFT = data_IFFT/(sqrt(original_variance));%max(abs(data_IFFT));
-                ampl = data_IFFT - mean(data_IFFT);
-                ampl(1) = 0;
+                data_IFFT = (data_IFFT- mean(data_IFFT))/(3*sqrt(original_variance));
+                ampl = obj.PGA*data_IFFT;
+
                 output_GM = table(time,ampl);
+
                 if plot_
                     figure;
                     plot(obj.Time,data_IFFT);
                     title('Pesudo Ground Motion in time-domain');
                     xlabel('time (s)');
-                    ylabel('Amplitude');   
+                    ylabel('Amplitude');  
+
                     figure;
-                    plot(freq,norm_FRF);
+                    plot(freq,abs(FRF));
+                    hold on 
+                    plot(freq,real(FRF));
+                    plot(freq,imag(FRF));
                     title('Fitting result');
                     xlabel('Freq (Hz)');
                     ylabel('Frequency Response Function (Hz)');
-                    legend("fitted filter");
+                    legend("abs", "real", 'imag');
+
                     figure;
                     plot(freq,abs(PesudoGM_freq));
-                    title('Pesudo Ground Motion in freq-domain');
+                    title('Unscaling Pesudo Ground Motion in freq-domain');
                     xlabel('Freq (Hz)');
                     ylabel('Amplitude');
                 end
@@ -213,11 +244,13 @@ classdef cls_GM_generator
             
         end
 
-        function [output_GM,frequency_coeffs,time_coeffs,GM_info] = generateTimeNonStaPesudoGMbyFit(obj,GM_model,init_Guess,AriasIntensity,show_info_, plot_)
-            if isempty(AriasIntensity)
-                AriasIntensity = obj.AriasIntensity;
-            end
+        function [output_GM,frequency_coeffs,time_coeffs,GM_info] = generateTimeNonStaPesudoGMbyFit(obj,GM_model,init_Guess,time_percentiles,show_info_, plot_)
             
+            if isempty(time_percentiles)
+                % Some pesudeo timeset
+                time_percentiles = [1, 1.5 ,5, 10];
+            end
+
             if nargin < 5
                 show_info_ = false;
             end
@@ -227,30 +260,27 @@ classdef cls_GM_generator
             end
             
             [stationaryGM,coeffs] = generateNormStaPesudoGM(obj,GM_model,init_Guess,show_info_, plot_);
-
+            
             %Get Percentile from recorded ground motion.
-            time_percentiles = getPercentileInfo(obj,false);
+            %time_percentiles = getPercentileInfo(obj,false);
+
             %Generate Time Modulating Function.
-            q = generateTimeModFunc(obj,time_percentiles,[],AriasIntensity,plot_);
+            q = generateTimeModFunc(obj,time_percentiles,[]);
  
             time = obj.Time;
             %Generate simulated ground motion
             ampl = q.*stationaryGM.ampl;
+
             output_GM = table(time,ampl);
 
             %Output coeffs
-            if strcmp(GM_model,"Hu_S0")
-                frequency_coeffs = coeffs(1:3);
-            else
-                frequency_coeffs = coeffs;
-            end
-
-            time_coeffs = time_percentiles;
-            GM_info = [AriasIntensity,obj.Time(end),obj.Fs];
+            frequency_coeffs = coeffs;
+            time_coeffs = getPercentileInfo(obj,plot_);
+            GM_info = [obj.PGA, obj.Time(end), obj.Fs];
 
             if show_info_
                 disp('----------Time Modulating Function-----------');
-                disp(['AriasIntensity = ',num2str(AriasIntensity)]);
+                disp(['AriasIntensity = ',num2str(obj.PGA)]);
                 disp(['Time      1%,P = ',num2str(time_percentiles(1)),' sec']);
                 disp(['Time      5%,P = ',num2str(time_percentiles(2)),' sec']);
                 disp(['Time     45%,P = ',num2str(time_percentiles(3)),' sec']);
@@ -266,21 +296,6 @@ classdef cls_GM_generator
                 xlabel('Time (s)');
                 ylabel('Amplitude');
                 legend("Recored Ground Motion","Non-Stationary Ground Motion");
-
-                plot_time = obj.Time(obj.Time<=time_percentiles(4)+10);
-
-                figure;
-                plot(plot_time,pi*cumtrapz(...
-                    power(obj.Ampl_t(obj.Time<=time_percentiles(4)+10),2))/(2*9.81));
-                hold on 
-                plot(plot_time,pi*cumtrapz(...
-                    power(ampl(obj.Time<=time_percentiles(4)+10),2))/(2*9.81));
-                title('Cumulative Arias Intensity Fitting');
-                xlabel('Time (s)');
-                ylabel('Arias Intensity');
-                legend("Recorded Arias Intensity",...
-                    "Simulated Arias Intensity");
-
             end
         end
 
@@ -297,9 +312,9 @@ classdef cls_GM_generator
             %   Reference: Chen(2022),Power spectral models of stationary earthquake-induced ground
             %                         motion process considering site characteristics
 
-            model_type_list = {'Hu_S0'};
+            model_type_list = {'Hu_S0','Hu_S0_NoContraint'};
             if ~ismember(model_type, model_type_list)
-                fprintf('ERROR! Wrong input type, please input one of the type: [%s]\n', strjoin(data_type_list, ', '));
+                fprintf('ERROR! Wrong input type, please input one of the type: [%s]\n', strjoin(model_type_list, ', '));
             end
             
             if nargin < 4
@@ -310,9 +325,14 @@ classdef cls_GM_generator
                 Omega_g=filter_para(1);
                 Beta_g=filter_para(2);
                 Omega_c=filter_para(3)*filter_para(1);
-                S_init = filter_para(4);
+                filter = HuKTmodel(obj,Omega_g,Beta_g,Omega_c);
+            end
 
-                filter = HuKTmodel(obj,Omega_g,Beta_g,S_init,Omega_c);
+             if strcmp(model_type,'Hu_S0_NoContraint') 
+                Omega_g=filter_para(1);
+                Beta_g=filter_para(2);
+                Omega_c=filter_para(3)*filter_para(1);
+                filter = HuKTmodel(obj,Omega_g,Beta_g,Omega_c);
             end
 
             if plot_
@@ -325,16 +345,15 @@ classdef cls_GM_generator
             end
         end
 
-        function filter = HuKTmodel(obj,Omega_g, Beta_g, S_init, Omega_c)
+        function filter = HuKTmodel(obj,Omega_g, Beta_g, Omega_c)
             rad_Freq = 2*pi*obj.Freq;
-            HighPass_filter = power(rad_Freq,6)./(power(rad_Freq,6)+power(Omega_c,6));
-            filter = S_init*HighPass_filter.*...
-                (power(Omega_g,4) + power(2*Omega_g*Beta_g*rad_Freq,2))./...
-                (power(power(Omega_g,2)-power(rad_Freq,2),2)+power(2*Omega_g*Beta_g*rad_Freq,2));
+            color_filter = (-1i.*power(rad_Freq,3))./((-1i.*power(rad_Freq,3))+power(Omega_c,3));
+            KT_model = (power(Omega_g,2)+1i*2*Beta_g*Omega_g.*rad_Freq)./((power(Omega_g,2)-power(rad_Freq,2))-1i*2*Beta_g*Omega_g.*rad_Freq);
+            filter = color_filter.*KT_model;
         end
 
         function [coeffs,Flag] = fit_GM_model(obj,model_type,init_Guess,show_info_,plot_)
-            model_type_list = {'Hu_S0','Hu_S0_NoContraint'};
+            model_type_list = {'Hu_S0','Hu_S0_NoContraint','Hu_S0_NC'};
             if ~ismember(model_type, model_type_list)
                 fprintf('ERROR! Wrong input type, please input one of the type: [%s]\n', strjoin(data_type_list, ', '));
             end
@@ -373,19 +392,24 @@ classdef cls_GM_generator
                     disp(['S_init  = ',num2str(coeffs(4))]);
                 end
             end
+            
 
         end
 
         function [HuKT_coeffs,Flag] = fit_HuKTmodel_S0_NoConstraint(obj,init_Guess,plot_)
             %Use without parameter: S0
+            unifrom_rand = rand(3, 1);
+            init_Guess(1) = 50 + (300 - 50) * unifrom_rand(1);
+            init_Guess(2) = 0.2 + (1.5 - 0.2) * unifrom_rand(2);
+            init_Guess(3) = 0 + (1.0 - 0 ) * unifrom_rand(3);
             
             rad_Freq = obj.Rad_Freq;
             fitting_fun = @(para) para(4).*(power(rad_Freq,6)).*(power(para(1),4) + power(2*para(1)*para(2).*rad_Freq,2))./((power(rad_Freq,6)+power(para(3)*para(1),6)).*(power(power(para(1),2)-power(rad_Freq,2),2)+power(2*para(1)*para(2).*rad_Freq,2)))- obj.PowerSpectrum;
             lb = [1,0,0,0];
-            ub = [500,inf,20,1];
+            ub = [500,20,20,1];
 
             %options = optimoptions('lsqnonlin','Display','iter','FunctionTolerance',1e-16,'StepTolerance',1e-16);
-            options = optimoptions('lsqnonlin','FunctionTolerance',1e-16,'StepTolerance',1e-16);
+            options = optimoptions('lsqnonlin',FunctionTolerance = 1e-30, StepTolerance = 1e-30, OptimalityTolerance = 1e-20, MaxFunctionEvaluations = 1000);
             x0 = init_Guess;
             [HuKT_coeffs,~,~,Flag,~] = lsqnonlin(fitting_fun,x0,lb,ub,options);
 
@@ -402,13 +426,89 @@ classdef cls_GM_generator
                 title('Fitting result');
                 xlabel('radius Freq');
                 ylabel('S(w)/S0');
-                legend("Scaling PowerSpectrum","fitted Hu-KT filter")
+                legend("Scaling PowerSpectrum","fitted Hu-KT no constraint filter")
             end
         end
 
-        function [HuKT_coeffs,Flag] = fit_HuKTmodel_S0(obj,init_Guess,plot_)
+        function [CP_coeffs,Flag] = fit_CPmodel(obj, init_Guess,plot_)
             %Use with parameter: S0
 
+            rad_Freq = obj.Rad_Freq;
+
+            %% Using the Parseval's theorem
+            %% Power spectral density
+            %psd =  FFT_PSD_Fac * obj.PowerSpectrum;
+            psd = obj.PowerSpectrum;
+            %S_init = obj.PGA;
+            function residual  = fitting_fun(para)
+                %wg, xig, wf_r, xif,S0 = para;
+                
+                wg = para(1);
+                xig = para(2);
+                wf_r = para(3);
+                xif = para(4);
+                S0 = para(5);
+                denom = 1./(power(power(wg,2) - power(rad_Freq,2),2) + power(2.*wg.*xig.*rad_Freq,2));
+                nom = (power(wg,4) + power(2.*wg.*xig.*rad_Freq,2));
+                filter_nom  = (power(rad_Freq,4));
+                filter_denom = 1./(power(power(wf_r.*wg,2) - power(rad_Freq,2),2) + power(2.*wf_r.*wg.*xif.*rad_Freq,2));
+
+
+                %residual = obj.PowerSpectrum - S0.*(filter_nom.*nom.*filter_denom.*denom);
+                residual = S0.*(filter_nom.*nom.*filter_denom.*denom) - psd;
+
+            end
+            
+            lb = [1,0,0,0,0];
+            ub = [500,10,1,10,1];
+
+           
+            %options = optimoptions('lsqnonlin','Display','iter','FunctionTolerance',1e-16,'StepTolerance',1e-16);
+            options = optimoptions('lsqnonlin','FunctionTolerance',1e-20,'StepTolerance',1e-20);
+            x0 = init_Guess;
+            [CP_coeffs,~,~,Flag,~] = lsqnonlin(@fitting_fun,x0,lb,ub,options);
+
+            %HuKT_coeffs = HuKT_coeffs(1:3);
+            %plot_fun =  @(para) para(4).*(power(rad_Freq,6)).*(power(para(1),4) + power(2*para(1)*para(2).*rad_Freq,2))./((power(rad_Freq,6)+power(para(3)*para(1),6)).*(power(power(para(1),2)-power(rad_Freq,2),2)+power(2*para(1)*para(2).*rad_Freq,2)));
+            function FRF= plot_fun(para)
+                wg = para(1);
+                xig = para(2);
+                wf_r = para(3);
+                xif = para(4);
+                S0 = para(5);
+                denom = 1./(power(power(wg,2) - power(rad_Freq,2),2) + power(2.*wg.*xig.*rad_Freq,2));
+                nom = (power(wg,4) + power(2.*wg.*xig.*rad_Freq,2));
+                filter_nom  = (power(rad_Freq,4));
+                filter_denom = 1./(power(power(wf_r.*wg,2) - power(rad_Freq,2),2) + power(2.*wf_r.*wg.*xif.*rad_Freq,2));
+                FRF = S0.*(filter_nom.*nom.*filter_denom.*denom);
+            end
+            
+            
+            if nargin < 3
+                plot_ = false;  
+            end
+            
+            if plot_
+                figure
+                plot(rad_Freq,psd);
+                hold on
+                plot(rad_Freq,plot_fun(CP_coeffs))
+                title('Fitting result');
+                xlabel('radius Freq');
+                ylabel('S(w)/S0');
+                legend("Scaling PowerSpectrum","fitted CP filter")
+            end
+
+        end
+        
+        function [HuKT_coeffs,Flag] = fit_HuKTmodel_S0(obj,init_Guess,plot_)
+            %Use with parameter: S0
+            
+            unifrom_rand = rand(3, 1);
+            init_Guess(1) = 50 + (300 - 50) * unifrom_rand(1);
+            init_Guess(2) = 0.4 + (1.0 - 0.4) * unifrom_rand(2);
+            init_Guess(3) = 0.1 + (1.0 - 0.1) * unifrom_rand(3);
+            
             rad_Freq = obj.Rad_Freq;
             %S_init = obj.PGA;
             fitting_fun = @(para) obj.PowerSpectrum - para(4).*(power(rad_Freq,6)).*(power(para(1),4) + power(2*para(1)*para(2).*rad_Freq,2))./((power(rad_Freq,6)+power(para(3)*para(1),6)).*(power(power(para(1),2)-power(rad_Freq,2),2)+power(2*para(1)*para(2).*rad_Freq,2)));
@@ -417,7 +517,7 @@ classdef cls_GM_generator
 
            
             %options = optimoptions('lsqnonlin','Display','iter','FunctionTolerance',1e-16,'StepTolerance',1e-16);
-            options = optimoptions('lsqnonlin','FunctionTolerance',1e-16,'StepTolerance',1e-16);
+            options = optimoptions('lsqnonlin','FunctionTolerance',1e-16,'StepTolerance',1e-16, OptimalityTolerance = 1e-16, MaxFunctionEvaluations = 1000);
             x0 = init_Guess;
             [HuKT_coeffs,~,~,Flag,~] = lsqnonlin(fitting_fun,x0,lb,ub,options);
 
@@ -425,7 +525,7 @@ classdef cls_GM_generator
             plot_fun =  @(para) para(4).*(power(rad_Freq,6)).*(power(para(1),4) + power(2*para(1)*para(2).*rad_Freq,2))./((power(rad_Freq,6)+power(para(3)*para(1),6)).*(power(power(para(1),2)-power(rad_Freq,2),2)+power(2*para(1)*para(2).*rad_Freq,2)));
             
             
-            if nargin < 4
+            if nargin < 3
                 plot_ = false;  
             end
             
@@ -441,7 +541,7 @@ classdef cls_GM_generator
             end
         end
 
-        function time_percentiles = getPercentileInfo(obj,plot_)  
+        function time_percentiles = getPercentileInfo(obj,plot_)   
             % Calculate Arias Intensity
             cdf = pi*cumtrapz(power(obj.Ampl_t,2))/(2*9.81);
 
@@ -478,11 +578,7 @@ classdef cls_GM_generator
             end
         end
 
-        function q = generateTimeModFunc(obj,time_percentiles,gamma_params,AriasIntensity,plot_)
-            if isempty(AriasIntensity)
-                AriasIntensity = obj.AriasIntensity;
-            end
-            
+        function q = generateTimeModFunc(obj,time_percentiles,gamma_params)
             if isempty(gamma_params)
                 t_mid = (time_percentiles(4)+time_percentiles(2))/2 - time_percentiles(2);
                 duration = time_percentiles(4)-time_percentiles(2);
@@ -490,10 +586,8 @@ classdef cls_GM_generator
                 objectiveFunction = @(params) (power(gamcdf(t_mid, params(1), params(1)/params(2)) - 0.50,2)+ ...
                                                power(gamcdf(duration, params(1), params(1)/params(2)) - 0.99,2));
                 
-
                 % Initial guess for alpha and beta
-                initial_guess = [3, 1]; % This needs to be adjusted based on your data
-               
+                initial_guess = [3, 1]; 
                 %options = optimset('MaxFunEvals',1000000,'MaxIter',100000,'TolFun',1e-16,'Display', 'iter');
                 options = optimset('MaxFunEvals',1000000,'MaxIter',100000,'TolFun',1e-16);
                 % Find parameters that minimize the objective function
@@ -502,7 +596,7 @@ classdef cls_GM_generator
             else
                 estimated_params = gamma_params;
             end
-            
+                 
             % Estimated parameters
             alpha = estimated_params(1);
             beta = estimated_params(2);    
@@ -512,49 +606,12 @@ classdef cls_GM_generator
             alpha = (time_percentiles(3)-time_percentiles(2))/beta;
             beta = mean/alpha;
 
-            time = obj.Time(obj.Time<= obj.Time(end)-time_percentiles(1));
-                      
+            time = obj.Time(obj.Time<= obj.Time(end)-time_percentiles(1));  
             gamma_pdf = gampdf(time,alpha,beta);
-            % Find indices of inf values
-            infIndices = isinf(gamma_pdf);  
-            % Replace inf values with 1
-            gamma_pdf(infIndices) = 1;
-            total_area = trapz(gamma_pdf);
-
-            q = sqrt(((2*9.81)/pi)*AriasIntensity*gamma_pdf/total_area);
-            q = [zeros(length(obj.Time)-length(time),1);q];
-
-            if nargin < 5
-                plot_ = false;  
-            end
             
-            if plot_
-
-                fitted_cdfgam = cumtrapz(pi*power(q,2)/(2*9.81));
-                scale_fitted_cdfgam = fitted_cdfgam;
-                plot_time = obj.Time(obj.Time<=time_percentiles(4)+6);
-
-                figure;
-                plot(plot_time,pi*cumtrapz(...
-                    power(obj.Ampl_t(obj.Time<=time_percentiles(4)+6),2))/(2*9.81));
-                hold on 
-                plot(plot_time,scale_fitted_cdfgam(obj.Time<=time_percentiles(4)+6));
-                title('Cumulative Arias Intensity Fitting');
-                xlabel('Time (s)');
-                ylabel('Arias Intensity');
-                legend("Recorded Arias Intensity",...
-                    " Fitted Model");
-
-                figure;
-                plot(obj.Time,obj.Ampl_t,'Color',[0.2, 0.4, 0.8, 0.2]);
-                hold on         
-                plot(obj.Time,q);
-                title('Time modulating function');
-                xlabel('Time (s)');
-                ylabel('Amplitude');
-                legend("Time modulating function","Signal");
-            end
-
+            % Normalized
+            q = gamma_pdf/max(abs(gamma_pdf));
+            q = [zeros(length(obj.Time)-length(time),1);q];
         end
 
         function plotTimeData(obj)
