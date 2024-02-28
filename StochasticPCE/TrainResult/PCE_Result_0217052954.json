@@ -1,0 +1,53 @@
+{
+    "X_type": {
+        "x1": "Uniform",
+        "x2": "Uniform"
+    },
+    "Z_type": [],
+    "max_poly_degree": 5,
+    "q_norm": [
+        0.75,
+        1.0
+    ],
+    "Solver": "HybridLAR",
+    "save_result_path": "C:/Users/v196m/Desktop/master_project/Masterarbeit/StochasticPCE",
+    "SparseOrderTable": [
+        [
+            0,
+            0
+        ],
+        [
+            1,
+            0
+        ]
+    ],
+    "active_list": [
+        0,
+        6
+    ],
+    "coeffs": [
+        [
+            1.0578592442714911
+        ],
+        [
+            0.04422304212742009
+        ]
+    ],
+    "p": 1,
+    "q": 0.75,
+    "error_corr": 0.00199152603888175,
+    "error_corr_record": [
+        0.00199152603888175,
+        0.00199152603888175,
+        0.00199152603888175,
+        0.00199152603888175,
+        0.00199152603888175,
+        0.00199152603888175,
+        0.00199152603888175,
+        0.00199152603888175,
+        0.0019945568657151725,
+        0.0020008072914690415
+    ],
+    "converge": false,
+    "overfit": false
+}

@@ -1,11 +1,11 @@
 clear;
 clc;
-close;
+close all;
 
-dir = 'X';
-file_name = ['Statistic_info_type2_',dir,'.mat'];
+dir = 'Y';
+file_name = ['Statistic_info_type1_',dir,'.mat'];
 path = load(file_name);
-data = path.statictic_info_type2;
+data = path.statictic_info_type1;
 
 Spectral_info = data(:,2);
 Time_info = data(:,3);
@@ -15,10 +15,10 @@ i_len = Spectral_info{:,1};
 j_len = Time_info{:,1};
 k_len = GM_info{:,1};
 
-cd SAVE_FIGS\FIGS_HISTO_X_type2\
+cd SAVE_FIGS\FIGS_HISTO_Y_type1\
 
 for i = 1:length(i_len)
-    h = histogram(cellfun(@(x) x(i),Spectral_info),20);
+    h = histogram(cellfun(@(x) x(i),Spectral_info),100);
     if i == 1
         title(['Histogram of ',dir,' dir input']);
         xlabel('Omega g')
@@ -27,10 +27,14 @@ for i = 1:length(i_len)
         title(['Histogram of ',dir,' dir input']);
         xlabel('Beta g')
         save_name = ['Histogram_',dir,'_VaryS0_Beta_g'];
-    else
+    elseif i == 3
         title(['Histogram of ',dir,' dir input']);
         xlabel('Ratio of Omega c (Omega c/Omega g)');
         save_name = ['Histogram_',dir,'_VaryS0_Omega_c'];
+    else 
+        title(['Histogram of ',dir,' dir input']);
+        xlabel('S0');
+        save_name = ['Histogram_',dir,'_VaryS0_S0'];
     end
     savefig([save_name,'fig']);
     saveas(gcf, save_name, 'jpg');
@@ -38,7 +42,7 @@ for i = 1:length(i_len)
 end
 
 for j = 1:length(j_len)
-    h = histogram(cellfun(@(x) x(j),Time_info),20);
+    h = histogram(cellfun(@(x) x(j),Time_info),100);
     if j == 1
         title(['Histogram of ',dir,' dir input']);
         xlabel('Time at 1% Percentile (sec)')
@@ -62,11 +66,11 @@ for j = 1:length(j_len)
 end
 
 for k = 1:length(k_len)-1
-    h = histogram(cellfun(@(x) x(k),GM_info),20);
+    h = histogram(cellfun(@(x) x(k),GM_info),100);
     if k == 1
         title(['Histogram of ',dir,' dir input']);
-        xlabel('Arias Intensity')
-        save_name = ['Histogram_',dir,'_VaryS0_AI_g'];
+        xlabel('PGA')
+        save_name = ['Histogram_',dir,'_VaryS0_PGA_g'];
     else
         title(['Histogram of ',dir,' dir input']);
         xlabel('Record time (sec)')
