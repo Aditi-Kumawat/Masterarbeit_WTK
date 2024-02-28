@@ -51,7 +51,7 @@ for i = 1:length(Record_info)
     R = Record_info_i{2};
     M = Record_info_i{3};
     
-    A_I         = GM_info{i}(1);
+    PGA         = GM_info{i}(1);
     W_g         = Spectral_info{i}(1)/(2*pi);
     Damp_g      = Spectral_info{i}(2);
     W_f_ratio   = Spectral_info{i}(3);
@@ -61,7 +61,7 @@ for i = 1:length(Record_info)
     Info_matrix(i,1) = M;
     Info_matrix(i,2) = D;
     Info_matrix(i,3) = R;
-    Info_matrix(i,4) = A_I;
+    Info_matrix(i,4) = PGA;
     Info_matrix(i,5) = W_g;
     Info_matrix(i,6) = Damp_g;
     Info_matrix(i,7) = W_f_ratio;
@@ -70,24 +70,58 @@ for i = 1:length(Record_info)
     Info_matrix(i,10) = index;
 
     Info_array = [Info_array; {parent_dir},{current_dir}, ...
-         M,D,R,A_I,W_g,Damp_g,W_f_ratio,Duration,T_mid_ratio];
+         M,D,R,PGA,W_g,Damp_g,W_f_ratio,Duration,T_mid_ratio];
 end
 
-Y = Info_matrix(:,4);
+
+%% Fitting Scenario: PGA 
+% Fitting 
+Y = log(Info_matrix(:,4));
 distance =  sqrt(power(Info_matrix(:,2),2)+ power(Info_matrix(:,3),2));
 VarsTable = table(Info_matrix(:,10), Info_matrix(:,1), log(distance), Info_matrix(:,2),Info_matrix(:,3),log(Info_matrix(:,4)),...
             Info_matrix(:,5),log(Info_matrix(:,6)),log(Info_matrix(:,7)),...
     'VariableNames',{'Event','M','Dis','D','R','lnPGA','Wg','DRg','Wc'});
 
-%lme = fitlme(VarsTable,'lnPGA ~ M + Dis +  (Dis|Event) ')
-lme = fitlme(VarsTable, 'Wc ~  Wg ')
+lme = fitlme(VarsTable,'lnPGA ~ M + Dis +  (Dis|Event) ');
+
+% Plot in-event and between event residual
+residuals = table(lme.Residuals.Raw,Info_matrix(:,1),log(distance), lme.Variables.Event,'VariableNames',{'res','M','Dis','Event'} );
+mean_r_event = grpstats(residuals, 'Event', {'mean','std'});
+overal_mean_r = mean(residuals.res);
+
+with_in = mean_r_event.mean_res - overal_mean_r;
+between = overal_mean_r  - residuals.res;
+
+figure
+subplot(211)
+scatter(residuals.M, between);
+hold on 
+scatter(mean_r_event.mean_M, with_in, 'filled')
+yline(0,'Color','[0.15,0.15,0.15]','LineStyle','--')
+xlabel("M")
+ylabel("Residuals")
+legend("with-in events","between events")
+ylim([-5,5])
+
+subplot(212)
+scatter(exp(lme.Variables.Dis),between, 'filled')
+yline(0,'Color','[0.15,0.15,0.15]','LineStyle','--')
+ylim([-5,5])
+xlabel("distance")
+ylabel("Residuals")
+figure
+histogram(lme.residuals)
+
+
+
+
+
+
+%lme = fitlme(VarsTable, 'Wc ~  Wg ')
 %lme = fitlme(VarsTable, 'DRg ~  Wg + Dis     ')
 
 %VarsTable = [Info_matrix(:,1), log(distance),log(Info_matrix(:,5))];
 
-
-
-histogram(Info_matrix(:,1))
 
 
 
@@ -129,23 +163,6 @@ histogram(Info_matrix(:,1))
 
 
 
-%residuals = table(lme.Residuals.Raw,Info_matrix(:,1),log(distance), lme.Variables.Event,'VariableNames',{'res','M','Dis','Event'} );
-%mean_r_event = grpstats(residuals, 'Event', {'mean','std'});
-%overal_mean_r = mean(residuals.res);
-%
-%with_in = mean_r_event.mean_res - overal_mean_r;
-%between = overal_mean_r  - residuals.res;
-%
-%figure
-%scatter(mean_r_event.mean_M, with_in, 'filled')
-%hold on 
-%scatter(residuals.M, between);
-%yline(0,'Color','[0.15,0.15,0.15]','LineStyle','--')
-%ylim([-5,5])
-%
-%figure
-%scatter(exp(lme.Variables.Dis),between)
-%yline(0,'Color','[0.15,0.15,0.15]','LineStyle','--')
-%ylim([-5,5])
+
 
 
