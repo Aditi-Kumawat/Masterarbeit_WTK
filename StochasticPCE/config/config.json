@@ -1,5 +1,5 @@
 {
-    "X_path":"C:/Users/v196m/Desktop/master_project/Masterarbeit/StochasticPCE/InputData/samples_500.mat",
+    "X_path":"C:/Users/Victor Kao/Desktop/Masterarbeit/StochasticPCE/InputData/samples_500.mat",
     "X_type":{"x1": "Gaussian","x2": "Gaussian", "x3":"Uniform"},
     "Z_type": [],
 
