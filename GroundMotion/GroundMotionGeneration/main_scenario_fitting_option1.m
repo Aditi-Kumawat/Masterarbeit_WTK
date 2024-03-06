@@ -21,7 +21,6 @@ for j = 1:length(T.Var1)
         year(dt), month(dt), day(dt), hour(dt), minute(dt), second(dt));
 end
 
-
 Record_info = data(:,1);
 Spectral_info = data(:,2);
 Time_info = data(:,3);
@@ -73,54 +72,81 @@ for i = 1:length(Record_info)
          M,D,R,PGA,W_g,Damp_g,W_f_ratio,Duration,T_mid_ratio];
 end
 
-%% Fitting distribution
+
+% Case 145 has too extreme value for Beta
+% Case 36 has too extreme value for W_c
+
+%% Fitting Scenario: Wc
+% Fitting 
 distance =  sqrt(power(Info_matrix(:,2),2)+ power(Info_matrix(:,3),2));
-data = (Info_matrix(:,6));
-%data =  log(distance(:,1))
 
-% Fit the data with gamma, beta, and lognormal distributions
-gamma_dist = fitdist(data, 'gamma');
-lognormal_dist = fitdist(data, 'lognormal');
-gaussian_dist = fitdist(data, 'normal');
-%beta_dist = fitdist(data, 'beta');
+VarsTable= table(Info_matrix(:,10), Info_matrix(:,1), log(distance), distance, Info_matrix(:,2),Info_matrix(:,3),log(Info_matrix(:,4)),...
+            log(Info_matrix(:,5)),log(Info_matrix(:,6)),log(Info_matrix(:,7)),...
+    'VariableNames',{'Event','M','LnDis','Dis','D','R','lnPGA','Wg','DRg','Wc'});
+VarsTable(36,:) = [];
+num = length(VarsTable.Event);
 
-% Perform Kolmogorov-Smirnov goodness-of-fit tests
-%[~, p_beta] = kstest(data, 'CDF', beta_dist);
-[~, p_gamma] = kstest(data, 'CDF', gamma_dist);
-[~, p_lognormal] = kstest(data, 'CDF', lognormal_dist);% Fit the data with uniform and Gaussian distributions
-
-% Perform Kolmogorov-Smirnov goodness-of-fit tests
-%[~, p_uniform] = kstest(data, 'CDF', uniform_dist);
-[~, p_gaussian] = kstest(data, 'CDF', gaussian_dist);
+LME_lnPGA = fitlme(VarsTable,'lnPGA ~  M + LnDis + (LnDis|Event) ',"StartMethod","random");
+LME_lnWg = fitlme(VarsTable,'Wg     ~  M + Dis + ( Dis|Event)',"StartMethod","random");
+% Wc should be fixed 
+LME_lnWc = fitlme(VarsTable,'Wc     ~  M + Dis + ( Dis|Event)',"StartMethod","random");
+% Beta should be fixed 
+LME_lnBeta = fitlme(VarsTable,'DRg  ~  M + Dis + ( Dis|Event)',"StartMethod","random");
 
 
-% Display p-values
-disp(['Gamma p-value: ', num2str(p_gamma)]);
-disp(['Lognormal p-value: ', num2str(p_lognormal)]);
-%disp(['Beta p-value: ', num2str(p_beta)]);
-disp(['Gaussian p-value: ', num2str(p_gaussian)]);
+% Concatenate the residuals into a single matrix
+all_residuals = [LME_lnPGA.residuals, LME_lnWg.residuals, LME_lnWc.residuals, LME_lnBeta.residuals];
 
-%% Plot the histogram
-h = histogram(data, 'Normalization', 'probability', 'DisplayName', 'Data');
+% Compute the correlation matrix
+correlation_matrix = corrcoef(all_residuals);
+% Compute the covariance matrix
+covariance_matrix = cov(all_residuals);
+% Compute the Cholesky decomposition of the covariance matrix
+chol_matrix = chol(covariance_matrix, 'lower');
+mu = [0,0,0,0];
+R = mvnrnd(mu,covariance_matrix ,num);
+
+%Plot the correlation matrix
+figure;
+corrplot(all_residuals)
+
+% Display the correlation matrix
+disp('Correlation Matrix of Residuals:');
+disp(correlation_matrix);
+
+% Display the covariance matrix
+disp('Covariance Matrix of Residuals:');
+disp(covariance_matrix);
+
+% Display the Cholesky matrix
+disp('Cholesky Decomposition of the Covariance Matrix:');
+disp(chol_matrix);
 
 
-hold on;
-%gaussian_dist.mu = -8.25;
-%gaussian_dist.sigma = 1.4;
-% Plot the fitted curves
-x_values = linspace(min(data), max(data), 100);
-plot(x_values, max(h.Values)*pdf(gamma_dist, x_values)/max(pdf(gamma_dist, x_values)), 'LineWidth', 2, 'DisplayName',  ['Scaled Gamma: ',num2str(gamma_dist.a),', ',num2str(gamma_dist.b)]);
-%plot(x_values, max(h.Values)*pdf(lognormal_dist, x_values)/max(pdf(lognormal_dist, x_values)), 'LineWidth', 2, 'DisplayName', ['Scaled Lognormal: ',num2str(lognormal_dist.mu),', ',num2str(lognormal_dist.sigma)]);
-%plot(x_values, max(h.Values)*pdf(gaussian_dist, x_values)/max(pdf(gaussian_dist, x_values)), 'LineWidth', 2, 'DisplayName', ['Scaled Gaussian: ',num2str(gaussian_dist.mu),', ',num2str(gaussian_dist.sigma)]);
+%fns_plotResidual_events(LME_lnPGA)
 
-% Add labels and legend
-xlabel('Value');
-ylabel('Probability Density');
-title('Histogram and Fitted Curves');
-legend('show');
+%fns_visualized_fitting(LME_lnWg, VarsTable, VarsTable.Wg, [0.5, 1, 1.5, 1.2, 0.5], [7.0, 9.5, 12.0, 8.0, 10])
 
-% Hold off to end the plot
-hold off;
+a = exp(predict(LME_lnWc)+R(:,2));
+histogram((Info_matrix(:,7)),100)
+hold on 
+histogram(a, 100)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -18,14 +18,14 @@ Realization = np.array([Y["Y"]])[0]
 
 Model.InputRealization(Realization)
 
-#Model.BuildModel_SPCE(tol_err=1E-8, show_info_ = False, overfit_count_ = 100,  save_result_ = True, result_path_ = save_dir)
+Model.BuildModel_SPCE(tol_err=1E-8, show_info_ = False, overfit_count_ = 100,  save_result_ = True, result_path_ = save_dir)
 #Model.BuildModel_SPCE(tol_err=1E-8, show_info_ = False, overfit_count_ = 100,  save_result_ = True, result_path_ = save_dir)
 
 # 1st try 4, 0.75
 #Model.Read_result(save_dir,"SPCE_Result_0228055837.json",show_info_= True)
 
 # 2nd try 4, 1
-Model.Read_result(save_dir,"SPCE_Result_0228093851.json",show_info_= True)
+#Model.Read_result(save_dir,"SPCE_Result_0228093851.json",show_info_= True)
 
 #Model.Read_result(save_dir,"SPCE_Result_0219220037.json",show_info_= True)
 #Model.SensitivityAnalysis(NumIndices= 6, Qol_based= False,show_info_=True)
