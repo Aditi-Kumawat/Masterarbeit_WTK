@@ -17,15 +17,6 @@ import datetime
 import os
 #from scipy.optimize import differential_evolution
 from scipy.stats import wasserstein_distance
-from optimparallel import minimize_parallel
-
-from skopt import Optimizer
-from skopt.space import Real
-from joblib import Parallel, delayed
-
-from scipy.optimize import linear_sum_assignment
-from scipy.spatial.distance import cdist
-from scipy.stats import wasserstein_distance
 
 class StochasticPCE:
     # Intialization
@@ -48,7 +39,7 @@ class StochasticPCE:
             self.result_path = loaded_config_data["save_result_path"]
 
             self.num_Vars = len(self.X_type)
-            self.p_list = np.arange(2, self.p_max+1)
+            self.p_list = np.arange(5, self.p_max+1)
 
             if "X_path" not in loaded_config_data:
                 if X is not None:
@@ -81,7 +72,6 @@ class StochasticPCE:
             self.error_corr = 100000
             self.error_corr_record = np.array([])
             self.first_order_Sobol_indices = {}
-
             self.Sigma = 0
             self.NfoldMLE_CVs = 0
             self.best_p = 0 
@@ -570,7 +560,11 @@ class StochasticPCE:
 
             NfoldMLE_CVs_D = 100000
             count_q_i = 0 
+            current_q = 0
             current_p = 0
+            Sigma_current_q = 0
+            coeffs_update_current_q = np.array([])
+            A_trunc_current_q = np.array([])
 
             for Z_type in self.Z_type:
                 NfoldMLE_CVs_p = 10000
@@ -634,7 +628,8 @@ class StochasticPCE:
                         X = np.copy(self.X)
                         Y = np.copy(self.Y)
                         
-
+                        
+                        #print(np.shape(self.InfoMat))
                         print(f"Error-Loo is {round(np.sqrt(err_loo),6)}")
                         print(f"Sigma searching range: ({round(0.1*np.sqrt(err_loo),6)}, {round(1.1*np.sqrt(err_loo),6)})")
                         
@@ -713,7 +708,6 @@ class StochasticPCE:
                                         return objective[0]
 
                                     # Optimize using BFGS
-                                    #result = minimize_parallel(fun=MLE_objfun, x0=coeffs_update)
                                     result = minimize(MLE_objfun, coeffs_update, method='L-BFGS-B')
                                     #result = minimize(MLE_objfun, coeffs_update, method='L-BFGS-B',tol = 1e-30 , options={'gtol': 1e-30,'ftol': 1e-30,'maxls':100,'maxiter':50000})
                                     coeffs_update = result.x
@@ -726,50 +720,30 @@ class StochasticPCE:
                                 self.Y = Y[test_index,:]
                                 self.N = len(self.Y)
                                 MLE_i = MLE_objfun(coeffs_update)
-                                #self.coeffs_update = coeffs_update
+                                self.coeffs_update = coeffs_update
                                 MLE_CV = MLE_CV + MLE_i
 
+                            
+
                             print(f"Precited Sigma: {round(hyper_sigma[0] ,6)}, N-fold MLE CV score: {round(MLE_CV, 6)}")
-                            return (MLE_CV, coeffs_update)
+                            return MLE_CV
                         
                         # Define the search space for hyperparameters
-                        #space = [Real(0.1*np.sqrt(err_loo), 1.01*np.sqrt(err_loo) , name='Sigma')]
+                        space = [Real(0.1*np.sqrt(err_loo), 1.01*np.sqrt(err_loo) , name='Sigma')]
 
                         # Perform Gaussian process optimization
-                        #gp_result = gp_minimize(BO_hyperparams_objfun, space, n_calls=opt_NumGP)
-                        optimizer = Optimizer(
-                                    dimensions=[Real(0.1*np.sqrt(err_loo), 1.01*np.sqrt(err_loo) , name='Sigma')],
-                                    base_estimator='gp'
-                                )
-                        
-                        coeffs_PCE_list = []
+                        gp_result = gp_minimize(BO_hyperparams_objfun, space, n_calls=opt_NumGP)
 
-                        # Run for 30 cases
-                        for i in range(9):
-                            x = optimizer.ask(n_points=6)
-                            y_Parallel = Parallel(n_jobs=6)(delayed(BO_hyperparams_objfun)(v) for v in x)  # evaluate points in parallel
-                            y_gp_obj, coeffs_PCE = zip(*y_Parallel)
-                            coeffs_PCE_list.extend(coeffs_PCE)
-                            optimizer.tell(x, y_gp_obj)
-                            
                         self.X = X
                         self.Y = Y
                         self.N = len(self.Y)
-
-                        # Find the minimum objective value and its corresponding input variables
-                        # Here the Parallel method is using, the sequence of print info might be different to the actual optimizer.yi and coeffs_PCE_list
-                        best_index = optimizer.yi.index(min(optimizer.yi))
-                        NfoldMLE_CVs = optimizer.yi[best_index]
-                        Sigma = optimizer.Xi[best_index]
-                        #print(coeffs_PCE_list)
-                        #print(best_index )
-                        #print(optimizer.yi)
-                        self.coeffs_update = coeffs_PCE_list[best_index]
-
-                        print(f"Current optimal Sigma: {Sigma}, N-fold MLE CV score: {NfoldMLE_CVs}")
+                        Sigma = gp_result.x
+                        NfoldMLE_CVs = gp_result.fun
+                        
+                        print(f"Current optimal Sigma: {gp_result.x}, N-fold MLE CV score: {gp_result.fun}")
                         print(f"Optimal Sigma should in the range: ({0.1*np.sqrt(err_loo)}, {1.0*np.sqrt(err_loo)})")
 
-                        #print(self.coeffs_update)
+                        print(self.coeffs_update)
 
                         if NfoldMLE_CVs_q > NfoldMLE_CVs:
                             NfoldMLE_CVs_q = NfoldMLE_CVs
@@ -996,28 +970,13 @@ class StochasticPCE:
             print("Dont allow the overwrite the variables, predict( ) will not be activated")
 
 
-    def ComputeERROR_WD2_SPCE(self, input_Predict_SPCE = None, input_realization = None):
+    def ComputeERROR_WD2_SPCE(self, input_Predict_SPCE = None, input_realization = None, show_info_ = False):
         self.display_line()
-        print("Start Compute Wassersein distance.")
+        print("Start Compute ERROR, using Wasserstein distance of order two.")
 
         try:
-            input_Predict_SPCE = input_Predict_SPCE.reshape(-1)
-            input_realization = input_realization.reshape(-1)
+            self.check_shape(np.shape(input_Predict_SPCE),np.shape(input_realization))
 
-            #self.check_shape(np.shape(input_Predict_SPCE),np.shape(input_realization))
-            
-            # Define the cost matrix using the squared Euclidean distance
-            cost_matrix = cdist(input_Predict_SPCE[:, np.newaxis], input_realization[:, np.newaxis], 'sqeuclidean')
-
-            # Solve the optimal transport problem using linear_sum_assignment
-            row_ind, col_ind = linear_sum_assignment(cost_matrix)
-
-            # Compute the quadratic Wasserstein distance
-            qwd = np.sum(cost_matrix[row_ind, col_ind]) / len(input_realization)
-            print("Quadratic Wasserstein distance:", qwd/np.var(input_realization))
-            # Compute the Wasserstein distance
-            wd = wasserstein_distance(input_Predict_SPCE, input_realization)
-            print("Wasserstein distance:", wd)
 
 
         except ValueError as e:

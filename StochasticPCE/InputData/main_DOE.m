@@ -14,6 +14,6 @@ for i = 1:numVars
     X(:,i) = X_i;
 end
 
-file_name = sprintf('SDOF_AGM_DOE_%d.mat', numSamples);
+file_name = sprintf('SDOF_AGM_DOE_%d_testing.mat', numSamples);
 save(file_name,'X','-mat');
 

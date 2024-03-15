@@ -2,13 +2,13 @@ clear;
 clc;
 close all;
 
-X_path = "C:\Users\v196m\Desktop\master_project\Masterarbeit\StochasticPCE\InputData\SDOF_AGM_DOE_1000.mat";
+X_path = "C:\Users\Victor Kao\Desktop\Masterarbeit\StochasticPCE\InputData\SDOF_AGM_DOE_1000_testing.mat";
 load(X_path);
 
 %[Time, Acc, ~, Disp] = fns_generateGM_Params([], [], 100 ,"Hu_S0", FRF_info(1:3), [0.5, 1 ,4, 10], GM_info(1));
 
 tic
-Yz = SDOF_simulation(X,"Validation", false);
+Yz = SDOF_simulation(X,"Random", false);
 toc
 
 
