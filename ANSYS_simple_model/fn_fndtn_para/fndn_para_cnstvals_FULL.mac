@@ -1,0 +1,56 @@
+
+
+
+!---------------------------------------------------------------------------!
+L1=(4*L_f*B_f/3.14159)**0.5 	!sqrt(A_f/pi)[m]  !(from luco and wang, 1978)
+G=(Vs**2)*(Rho)
+
+!Parameters defined from Wolf,1997
+K_hor = 8*G*L1/(2-Nu)
+K_vert = 4*G*L1/(1-Nu)
+K_rock = 8*G*(L1**3)/(3*(1-Nu))
+K_tors= 16*G*(L1**3)/3
+
+
+!Lumped Mass coefficient [kg] 
+M_Z=((L1**2)/(Vs**2))*0.27*K_vert	
+M_Y=((L1**2)/(Vs**2))*0.095*K_hor
+M_X=((L1**2)/(Vs**2))*0.095*K_hor
+Ix = ((L1**2)/(Vs**2))*0.24*K_rock	
+Iy = ((L1**2)/(Vs**2))*0.24*K_rock
+Iz = ((L1**2)/(Vs**2))*0.045*K_tors
+gamma_C_rock = 0.3 / ( 1+ ((3*(1-Nu)*Ix)/(8*L1**5*rho)) )
+gamma_C_tors =(0.433/(1+((2*Iz)/(L1**5*rho))))*((Iz)/(L1**5*rho))**(0.5)
+
+C_hor = L1*0.58*K_hor / Vs
+C_vert = L1*0.85*K_vert / Vs
+C_rock = L1*gamma_C_rock*K_rock/Vs
+C_tors = L1*gamma_C_tors*K_tors/Vs
+
+
+!-Stiffness-------------------------
+Ka_11=K_hor	
+Ka_22=K_hor
+Ka_33=K_vert					
+Ka_44=K_rock		
+Ka_55=K_rock	
+Ka_66=K_tors
+Ka_15=0	
+Ka_24=0			
+	
+!-damping--------------------------- 
+Ca_11=C_hor	
+Ca_22=C_hor
+Ca_33=C_vert		
+Ca_44=C_rock		
+Ca_55=C_rock	
+Ca_66=C_tors
+Ca_15=0
+Ca_24=0
+
+
+
+
+
+	
+

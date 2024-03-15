@@ -1,0 +1,13 @@
+
+!****************Define Constraints at far end of the LPM*******************!
+NSEL,S,LOC,Z,-.1
+CM, n_load, NODE        !creating a group to define load location
+NSEL,ALL
+
+D,n_load,rotx,0
+D,n_load,roty,0
+D,n_load,rotz,0
+D,n_load,ux,0
+D,n_load,uy,0
+D,n_load,uz,0 
+NSEL,ALL

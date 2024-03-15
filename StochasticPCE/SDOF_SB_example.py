@@ -5,7 +5,7 @@ import sys
 import numpy as np
 import scipy.io as sio
 import matplotlib.pyplot as plt
-import SPCE_1ver as SPCE
+import SPCE_ParallelGP as SPCE
 from scipy.stats import wasserstein_distance
 import time
 

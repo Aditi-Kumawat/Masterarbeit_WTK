@@ -1,0 +1,37 @@
+!********************************************************************************!FD
+!********************************************************************************!FD
+ ntime=((End_t_val-Start_t_val)/t_val_Incr)+1               ! Anzahl der zu berechnenden t_valuenzen                 !FD
+!********************************************************************************!FD
+!********************************************************************************!FD
+
+!*---------------------------LösungsTeil----------------------------------------*!FD
+/SOLU                       ! Aufruf des Solution-Processors			 !FD
+ANTYPE,TRANS               ! Harmonische Analyse				 !FD
+OUTRES,ALL,NONE		    	! To select specific results, deactivate all         !FD
+OUTRES,NSOL,1	            ! Activate node solution    		         !FD
+OUTRES,STRS 		   		! Activate stress solution				 !FD
+OUTRES,EPEL 		    	! Activate strain solution  			 !FD
+OUTRES,ESOL 		    	! Activate element solution				 !FD
+OUTRES,RSOL 		    	! Activate reaction forces 				 !FD
+TRNOPT,FULL
+!********************************************************************************!FD
+!********************************************************************************!FD
+                                                                                 !FD
+NSEL,All  									 !FD
+
+!*------------t_valuenzschleife---------                                          !FD
+   *do,itime,1,ntime,1                                                           !FD
+       !t_val = Start_t_val+(itime-1)*t_val_Incr                                	 !FD
+       t_val = itime*t_val_Incr
+       D,n_load,UX,VT1(t_val,1)
+	   D,n_load,UY,VT1(t_val,2)
+       D,n_load,UZ,VT1(t_val,3)
+	   *MSG,WARN, itime, ntime, t_val,
+	    *** Step %I von %I  T_val %G 
+ 
+       TIME,%t_val%
+       NSUBST,1,
+       ALLSEL
+       SOLVE                 ! selbstredend					 !FD
+   *enddo                                                                        !FD
+FINISH ! Solution-Processor                                                      !FD

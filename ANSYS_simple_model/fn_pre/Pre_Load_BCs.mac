@@ -1,0 +1,19 @@
+!BCs are defined in this file
+!Currently it is for 2-D simplification
+
+
+!****************Boundary Conditions for 2D case*******************!
+!D,n_buil_base,uy,0
+!D,n_buil_base,rotx,0
+!D,n_buil_base,rotz,0
+!NSEL,ALL
+
+!****************Define Constraints at far end of the LPM*******************!
+NSEL,S,LOC,Z,-.1
+CM, n_load, NODE        !creating a group to define load location
+NSEL,ALL
+!
+D,n_load,rotx,0
+D,n_load,roty,0
+D,n_load,rotz,0
+NSEL,ALL

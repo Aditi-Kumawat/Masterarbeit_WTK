@@ -1,0 +1,41 @@
+!********************************************************************************!FD
+!* FREQUENZ - BEREICH           FREQUENZ - BEREICH           FREQUENZ - BEREICH *!FD
+!********************************************************************************!FD
+									         !FD
+!**************************** Eingaben Frequenzbereich **************************!FD
+!********************************************************************************!FD
+ nfreq=((EndFreq-StarFreq)/FreqIncr)+1               ! Anzahl der zu berechnenden Frequenzen                 !FD
+!********************************************************************************!FD
+!********************************************************************************!FD
+!*---------------------------LösungsTeil----------------------------------------*!FD
+/SOLU                       ! Aufruf des Solution-Processors			 !FD
+ANTYPE,HARMIC               ! Harmonische Analyse				 !FD
+OUTRES,ALL,NONE		    	! To select specific results, deactivate all         !FD
+OUTRES,NSOL,1	            ! Activate node solution    		         !FD
+!OUTRES,STRS 		   		! Activate stress solution				 !FD
+!OUTRES,EPEL 		    	! Activate strain solution  			 !FD
+OUTRES,ESOL 		    	! Activate element solution				 !FD
+OUTRES,RSOL 		    	! Activate reaction forces 				 !FD
+!********************************************************************************!FD
+!********************************************************************************!FD
+                                                                                 !FD
+NSEL,All  									 !FD
+DMPRAT, D_bl       !DMPRAT cannot work here!
+
+
+! Import loading
+*DIM,VT1,TABLE,101,2
+*VREAD,VT1(1,0),'FRF_input','txt','fn_pre\FRF_Load\',jik,2,101,1
+(1x,E14.7,1x,E14.7)
+VT1(0,1) = 1.0
+*VPLOt,VT1(1,0),VT1(1,1)
+
+
+HARFRQ,0.01,100
+NSUBST,500,1000,200
+D,n_load,UX,%VT1%
+D,n_load,UY,%VT1%
+D,n_load,UZ,%VT1%
+SOLVE
+
+FINISH ! Solution-Processor                                                      !FD            

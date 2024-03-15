@@ -1,0 +1,169 @@
+/POST26 	!Postprocessor im Frequenzbereich
+NUMVAR, 200	!Anzahl der möglichen Variablen (default 10)
+!-------------------------------------------------------------------------------------------!
+!-------------------------------------------------------------------------------------------!
+!------------------------------------ node: floor centre -----------------------------------!
+NSEL,S,LOC,X,0  
+NSEL,R,LOC,Y,0
+NSEL,R,LOC,Z,0
+*GET,n_center_0,NODE,,NUM,MIN  
+NSEL,All
+
+
+*IF,ftyp,EQ,'PLATE',THEN
+    NSEL,S,LOC,X,3*l/2 
+    NSEL,R,LOC,Y,3*b/2
+    NSEL,R,LOC,Z,0
+    *GET,n_center_0,NODE,,NUM,MIN  
+    NSEL,All
+*ENDIF
+NSEL,All
+   
+
+NSEL,All
+!*CREATE,ansuitmp                                         ! Create a command macro file
+!-------------------------------------------------------------------------------------------!
+!-------------------------------------------------------------------------------------------!
+NSOL, 101, n_center_0, U, Z, Center_0
+prvar,101
+*DIM,Disp_Center_Z_0_l%l%_b%b%,ARRAY,nfreq,5,1
+*do,ifreq,1,nfreq,1  
+    freq = StarFreq+(ifreq-1)*FreqIncr                                	 !FD
+	*GET,Disp_Center_Z_0_l%l%_b%b%(ifreq,1),VARI,1,REAL,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_Z_0_l%l%_b%b%(ifreq,2),VARI,101,AMPL,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_Z_0_l%l%_b%b%(ifreq,3),VARI,101,PHASE,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_Z_0_l%l%_b%b%(ifreq,4),VARI,101,REAL,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_Z_0_l%l%_b%b%(ifreq,5),VARI,101,IMAG,(ifreq-1)*FreqIncr
+*enddo
+
+/MKDIR,Results_Ansys\Bld_with_Walls\n_storeys_%n_storeys%_n_rooms_X_%n_roomsx%_n_rooms_Y_%n_roomsy%_l%l%_by_b%b%_ftyp_%ftyp%_Vs_%Vs%_Lf_%L_f%_Bf_%B_f%_CONFIG_%config_i%
+*CFOPEN,'Results_Ansys\Bld_with_Walls\n_storeys_%n_storeys%_n_rooms_X_%n_roomsx%_n_rooms_Y_%n_roomsy%_l%l%_by_b%b%_ftyp_%ftyp%_Vs_%Vs%_Lf_%L_f%_Bf_%B_f%_CONFIG_%config_i%\Disp_Center_Z_0_l%l%_b%b%','csv',              ! Open a command file
+*VWRITE
+(2x,'Freq',14x,'AMPL',14x,'PHASE',10x,'REAL',10x,'IMAG')
+*VWRITE,Disp_Center_Z_0_l%l%_b%b%(1,1),Disp_Center_Z_0_l%l%_b%b%(1,2),Disp_Center_Z_0_l%l%_b%b%(1,3),Disp_Center_Z_0_l%l%_b%b%(1,4),Disp_Center_Z_0_l%l%_b%b%(1,5),,,,       ! Write the data to a file
+(E14.7,2x,E14.7,2x,E14.7,2x,E14.7,2x,E14.7)									      
+*CFCLOS 
+
+!-------------------------------------------------------------------------------------------!
+!-------------------------------------------------------------------------------------------!
+NSEL,All
+NSOL, 102, n_center_0, U, X, Center_0
+prvar,102
+*DIM,Disp_Center_X_0_l%l%_b%b%,ARRAY,nfreq,5,1
+*do,ifreq,1,nfreq,1  
+    freq = StarFreq+(ifreq-1)*FreqIncr                                	 !FD
+	*GET,Disp_Center_X_0_l%l%_b%b%(ifreq,1),VARI,1,REAL,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_X_0_l%l%_b%b%(ifreq,2),VARI,102,AMPL,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_X_0_l%l%_b%b%(ifreq,3),VARI,102,PHASE,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_X_0_l%l%_b%b%(ifreq,4),VARI,102,REAL,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_X_0_l%l%_b%b%(ifreq,5),VARI,102,IMAG,(ifreq-1)*FreqIncr
+*enddo
+/MKDIR,Results_Ansys\Bld_with_Walls\n_storeys_%n_storeys%_n_rooms_X_%n_roomsx%_n_rooms_Y_%n_roomsy%_l%l%_by_b%b%_ftyp_%ftyp%_Vs_%Vs%_Lf_%L_f%_Bf_%B_f%_CONFIG_%config_i%
+*CFOPEN,'Results_Ansys\Bld_with_Walls\n_storeys_%n_storeys%_n_rooms_X_%n_roomsx%_n_rooms_Y_%n_roomsy%_l%l%_by_b%b%_ftyp_%ftyp%_Vs_%Vs%_Lf_%L_f%_Bf_%B_f%_CONFIG_%config_i%\Disp_Center_X_0_l%l%_b%b%','csv',              ! Open a command file
+*VWRITE
+(2x,'Freq',14x,'AMPL',14x,'PHASE',10x,'REAL',10x,'IMAG')
+*VWRITE,Disp_Center_X_0_l%l%_b%b%(1,1),Disp_Center_X_0_l%l%_b%b%(1,2),Disp_Center_X_0_l%l%_b%b%(1,3),Disp_Center_X_0_l%l%_b%b%(1,4),Disp_Center_X_0_l%l%_b%b%(1,5),,,,       ! Write the data to a file
+(E14.7,2x,E14.7,2x,E14.7,2x,E14.7,2x,E14.7)									      
+*CFCLOS 
+!-------------------------------------------------------------------------------------------!
+!-------------------------------------------------------------------------------------------!
+NSEL,All
+NSOL, 103, n_center_0, U, Y, Center_0
+prvar,103
+*DIM,Disp_Center_Y_0_l%l%_b%b%,ARRAY,nfreq,5,1
+*do,ifreq,1,nfreq,1  
+    freq = StarFreq+(ifreq-1)*FreqIncr                                	 !FD
+	*GET,Disp_Center_Y_0_l%l%_b%b%(ifreq,1),VARI,1,REAL,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_Y_0_l%l%_b%b%(ifreq,2),VARI,103,AMPL,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_Y_0_l%l%_b%b%(ifreq,3),VARI,103,PHASE,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_Y_0_l%l%_b%b%(ifreq,4),VARI,103,REAL,(ifreq-1)*FreqIncr
+    *GET,Disp_Center_Y_0_l%l%_b%b%(ifreq,5),VARI,103,IMAG,(ifreq-1)*FreqIncr
+*enddo
+/MKDIR,Results_Ansys\Bld_with_Walls\n_storeys_%n_storeys%_n_rooms_X_%n_roomsx%_n_rooms_Y_%n_roomsy%_l%l%_by_b%b%_ftyp_%ftyp%_Vs_%Vs%_Lf_%L_f%_Bf_%B_f%_CONFIG_%config_i%
+*CFOPEN,'Results_Ansys\Bld_with_Walls\n_storeys_%n_storeys%_n_rooms_X_%n_roomsx%_n_rooms_Y_%n_roomsy%_l%l%_by_b%b%_ftyp_%ftyp%_Vs_%Vs%_Lf_%L_f%_Bf_%B_f%_CONFIG_%config_i%\Disp_Center_Y_0_l%l%_b%b%','csv',              ! Open a command file
+*VWRITE
+(2x,'Freq',14x,'AMPL',14x,'PHASE',10x,'REAL',10x,'IMAG')
+*VWRITE,Disp_Center_Y_0_l%l%_b%b%(1,1),Disp_Center_Y_0_l%l%_b%b%(1,2),Disp_Center_Y_0_l%l%_b%b%(1,3),Disp_Center_Y_0_l%l%_b%b%(1,4),Disp_Center_Y_0_l%l%_b%b%(1,5),,,,       ! Write the data to a file
+(E14.7,2x,E14.7,2x,E14.7,2x,E14.7,2x,E14.7)									      
+*CFCLOS 
+
+
+!-------------------------------------------------------------------------------------------!
+!-------------------------------------------------------------------------------------------!
+NSEL,All
+*do,i_storey,1,n_storeys,1  
+	NSEL,S,LOC,X,l+(0.5*l)     
+	NSEL,R,LOC,Y,b+(0.5*b)   
+	NSEL,R,LOC,Z,i_storey*h
+	*GET,n_center_%i_storey%,NODE,,NUM,MIN  
+	NSEL,All
+	
+
+	NSOL, i_storey+1, n_center_%i_storey%, U, Z, Center_%i_storey%
+	prvar,i_storey+1
+	PLVAR, i_storey+1, 101
+	!/INPUT,'Save_Plot','mac'
+		*DIM,Disp_Center_Z_%i_storey%_l%l%_b%b%,ARRAY,nfreq,5,1
+		*do,ifreq,1,nfreq,1  
+			freq = StarFreq+(ifreq-1)*FreqIncr                                	 !FD
+			*GET,Disp_Center_Z_%i_storey%_l%l%_b%b%(ifreq,1),VARI,1,REAL,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_Z_%i_storey%_l%l%_b%b%(ifreq,2),VARI,i_storey+1,AMPL,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_Z_%i_storey%_l%l%_b%b%(ifreq,3),VARI,i_storey+1,PHASE,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_Z_%i_storey%_l%l%_b%b%(ifreq,4),VARI,i_storey+1,REAL,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_Z_%i_storey%_l%l%_b%b%(ifreq,5),VARI,i_storey+1,IMAG,(ifreq-1)*FreqIncr
+		*enddo
+
+*CFOPEN,'Results_Ansys\Bld_with_Walls\n_storeys_%n_storeys%_n_rooms_X_%n_roomsx%_n_rooms_Y_%n_roomsy%_l%l%_by_b%b%_ftyp_%ftyp%_Vs_%Vs%_Lf_%L_f%_Bf_%B_f%_CONFIG_%config_i%\Disp_Center_Z_%i_storey%_l%l%_b%b%','csv',              ! Open a command file
+*VWRITE
+(2x,'Freq',14x,'AMPL',14x,'PHASE',10x,'REAL',10x,'IMAG')
+*VWRITE,Disp_Center_Z_%i_storey%_l%l%_b%b%(1,1),Disp_Center_Z_%i_storey%_l%l%_b%b%(1,2),Disp_Center_Z_%i_storey%_l%l%_b%b%(1,3),Disp_Center_Z_%i_storey%_l%l%_b%b%(1,4),Disp_Center_Z_%i_storey%_l%l%_b%b%(1,5),,,,       ! Write the data to a file
+(E14.7,2x,E14.7,2x,E14.7,2x,E14.7,2x,E14.7)							      
+*CFCLOS 
+
+	NSOL, 20*i_storey+1, n_center_%i_storey%, U, X, Center_%i_storey%
+	prvar,20*i_storey+1
+	PLVAR, 20*i_storey+1, 102
+	!/INPUT,'Save_Plot','mac'
+		*DIM,Disp_Center_X_%i_storey%_l%l%_b%b%,ARRAY,nfreq,5,1
+		*do,ifreq,1,nfreq,1  
+			freq = StarFreq+(ifreq-1)*FreqIncr                                	 !FD
+			*GET,Disp_Center_X_%i_storey%_l%l%_b%b%(ifreq,1),VARI,1,REAL,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_X_%i_storey%_l%l%_b%b%(ifreq,2),VARI,20*i_storey+1,AMPL,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_X_%i_storey%_l%l%_b%b%(ifreq,3),VARI,20*i_storey+1,PHASE,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_X_%i_storey%_l%l%_b%b%(ifreq,4),VARI,20*i_storey+1,REAL,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_X_%i_storey%_l%l%_b%b%(ifreq,5),VARI,20*i_storey+1,IMAG,(ifreq-1)*FreqIncr
+		*enddo
+
+*CFOPEN,'Results_Ansys\Bld_with_Walls\n_storeys_%n_storeys%_n_rooms_X_%n_roomsx%_n_rooms_Y_%n_roomsy%_l%l%_by_b%b%_ftyp_%ftyp%_Vs_%Vs%_Lf_%L_f%_Bf_%B_f%_CONFIG_%config_i%\Disp_Center_X_%i_storey%_l%l%_b%b%','csv',              ! Open a command file
+*VWRITE
+(2x,'Freq',14x,'AMPL',14x,'PHASE',10x,'REAL',10x,'IMAG')
+*VWRITE,Disp_Center_X_%i_storey%_l%l%_b%b%(1,1),Disp_Center_X_%i_storey%_l%l%_b%b%(1,2),Disp_Center_X_%i_storey%_l%l%_b%b%(1,3),Disp_Center_X_%i_storey%_l%l%_b%b%(1,4),Disp_Center_X_%i_storey%_l%l%_b%b%(1,5),,,,       ! Write the data to a file
+(E14.7,2x,E14.7,2x,E14.7,2x,E14.7,2x,E14.7)							      
+*CFCLOS 
+
+	NSOL, 40*i_storey+1, n_center_%i_storey%, U, Y, Center_%i_storey%
+	prvar,40*i_storey+1
+	PLVAR, 40*i_storey+1, 103
+	!/INPUT,'Save_Plot','mac'
+		*DIM,Disp_Center_Y_%i_storey%_l%l%_b%b%,ARRAY,nfreq,5,1
+		*do,ifreq,1,nfreq,1  
+			freq = StarFreq+(ifreq-1)*FreqIncr                                	 !FD
+			*GET,Disp_Center_Y_%i_storey%_l%l%_b%b%(ifreq,1),VARI,1,REAL,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_Y_%i_storey%_l%l%_b%b%(ifreq,2),VARI,40*i_storey+1,AMPL,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_Y_%i_storey%_l%l%_b%b%(ifreq,3),VARI,40*i_storey+1,PHASE,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_Y_%i_storey%_l%l%_b%b%(ifreq,4),VARI,40*i_storey+1,REAL,(ifreq-1)*FreqIncr
+			*GET,Disp_Center_Y_%i_storey%_l%l%_b%b%(ifreq,5),VARI,40*i_storey+1,IMAG,(ifreq-1)*FreqIncr
+		*enddo
+
+*CFOPEN,'Results_Ansys\Bld_with_Walls\n_storeys_%n_storeys%_n_rooms_X_%n_roomsx%_n_rooms_Y_%n_roomsy%_l%l%_by_b%b%_ftyp_%ftyp%_Vs_%Vs%_Lf_%L_f%_Bf_%B_f%_CONFIG_%config_i%\Disp_Center_Y_%i_storey%_l%l%_b%b%','csv',              ! Open a command file
+*VWRITE
+(2x,'Freq',14x,'AMPL',14x,'PHASE',10x,'REAL',10x,'IMAG')
+*VWRITE,Disp_Center_Y_%i_storey%_l%l%_b%b%(1,1),Disp_Center_Y_%i_storey%_l%l%_b%b%(1,2),Disp_Center_Y_%i_storey%_l%l%_b%b%(1,3),Disp_Center_Y_%i_storey%_l%l%_b%b%(1,4),Disp_Center_Y_%i_storey%_l%l%_b%b%(1,5),,,,       ! Write the data to a file
+(E14.7,2x,E14.7,2x,E14.7,2x,E14.7,2x,E14.7)							      
+*CFCLOS 
+*enddo
+!-------------------------------------------------------------------------------------------!
+!-------------------------------------------------------------------------------------------!
+!*END 										! Close the macro file
+!/INPUT,ansuitmp 							! Run the macro file
+FINISH 										! Finish and Exit Postprocessor

@@ -1,0 +1,142 @@
+!****************************Geometry*******************************!
+/PREP7
+
+!************************* Creating keypoints **************************!
+*DO,i_storey,0,n_storeys,1
+    *DO,i_kp,0,n_roomsy,1
+        *DO,j_kp,0,n_roomsx,1
+            n_kp=(i_storey*(n_roomsy+1)*(n_roomsx+1))+(i_kp*(n_roomsx+1))+j_kp+1
+            K,n_kp,j_kp*l,i_kp*b,i_storey*h
+        *ENDDO
+    *ENDDO
+*ENDDO		
+
+!********************** Creating beams and columns ***********************!
+*DO,i_f1,1,n_storeys,1
+    *DO,j_b1,0,n_roomsy,1
+        *DO,k,1,n_roomsx,1
+            start=(i_f1*(n_roomsy+1)*(n_roomsx+1))+j_b1*(n_roomsx+1)+k
+            end=start+1
+            LSTR,start,end
+        *ENDDO
+    *ENDDO
+
+    *DO,j_b2,1,n_roomsx+1,1
+        *DO,k,0,n_roomsy-1,1
+            start=(i_f1*(n_roomsy+1)*(n_roomsx+1))+k*(n_roomsx+1)+j_b2
+            end=start+n_roomsx+1
+            LSTR,start,end
+        *ENDDO
+    *ENDDO
+*ENDDO
+
+*DO,i_f1,1,n_storeys,1
+    *DO,j_col,1,((n_roomsx+1)*(n_roomsy+1)),1
+        start=((i_f1-1)*(n_roomsy+1)*(n_roomsx+1))+j_col
+        end=start+(n_roomsx+1)*(n_roomsy+1)
+        LSTR,start,end
+    *ENDDO
+*ENDDO
+/PNUM,KP,0 			! Turn on keypoint numbering
+/PNUM,Line,1 		! Turn on line numbering
+
+
+!*************************** Creating floor and walls *************************!
+*DO,i_f2,1,n_storeys,1
+    *DO,j_w1,1,n_roomsy,1
+        *DO,k_w1,1,n_roomsx,1
+            p1=k_w1+(i_f2*(n_roomsy+1)*(n_roomsx+1))+(n_roomsx+1)*(j_w1-1)
+            p2=p1+1
+            p3=k_w1+1+(n_roomsx+1)*j_w1+(i_f2*(n_roomsy+1)*(n_roomsx+1))
+            p4=p3-1
+            A,p1,p2,p3,p4
+        *ENDDO
+    *ENDDO
+*ENDDO
+	
+/PNUM,Area,0
+
+NUMMRG,ALL
+
+n_floorbeams=((n_roomsx)*(n_roomsy+1))+((n_roomsx+1)*(n_roomsy))
+n_floorcolumns=(n_roomsx+1)*(n_roomsy+1)
+lines_beams=n_floorbeams*(n_storeys)
+line_columns=n_floorcolumns*(n_storeys)
+lines_total=lines_beams+line_columns
+
+!*************************** Material assignemnt ***************************!
+ET,1,BEAM189 				! Use BEAM189 elements
+SECTYPE,1,BEAM,RECT 		! Use a rectangular cross section for beam
+SECOFFSET,CENT 				! Offset beam node to the centroid
+SECDATA,b_col,h_col, 		! Use 0.1 x 0.1 cross section
+MP,EX,1,E_col				! Define Young's modulus for aluminum: material #1
+MP,PRXY,1,nu_col 			! Define Poisson's ratio for aluminum: material #1
+MP,DENS,1,rho_col,,,
+
+LSEL,S,LINE,,(lines_beams+1),(lines_total)
+LATT,1,0,1,,,,1				! Set element attributes: material #1, element #1
+LSEL,ALL
+
+ET,2,BEAM189 				! Use BEAM189 elements
+SECTYPE,2,BEAM,RECT 		! Use a rectangular cross section for beam
+SECOFFSET,CENT 				! Offset beam node to the centroid
+SECDATA,b_beam,h_beam, 		! Use 0.1 x 0.1 cross section
+MP,EX,2,E_beam				! sDefine Young's modulus for aluminum: material #2
+MP,PRXY,2,nu_beam 			! Define Poisson's ratio for aluminum: material #2
+MP,DENS,2,rho_beam,,,
+LSEL,S,LINE,,1,lines_beams
+LATT,2,0,2,,,,2				! Set element attributes: material #2, element #2
+LSEL,ALL
+
+ET,3,SHELL181 				! Use PLANE183 elements
+SECTYPE,3,SHELL
+SECDATA,t_floor1
+MP,EX,3,E_floor 			! Define Young's modulus for material #3
+MP,PRXY,3,nu_floor 			! Define Poisson's ratio for material #3
+MP,DENS,3,rho_floor,,,
+!MP,DMPR,3,0.1
+ASEL,ALL
+AATT,3,0,3,,3				! Set element attributes: material #3, element #3
+LPLOT
+
+
+!**************************** Mesh generation ****************************!
+LSEL,ALL
+LSEL,S,MAT,,1
+LESIZE,ALL,,,nVolz
+
+LSEL,ALL 
+LSEL,S,LINE,,1,((n_roomsx)*(n_roomsy+1))
+*DO,i,2,n_storeys,1
+    LSEL,A,LINE,,((i-1)*n_floorbeams+1),((i-1)*n_floorbeams+((n_roomsx)*(n_roomsy+1)))    
+*ENDDO
+LESIZE,ALL,,,nVolx
+
+LSEL,ALL 
+LSEL,S,LINE,,((n_roomsx)*(n_roomsy+1))+1,n_floorbeams
+*DO,i,2,n_storeys,1
+    LSEL,A,LINE,,((i-1)*n_floorbeams+n_roomsx*(n_roomsy+1)+1),(i*n_floorbeams)    
+*ENDDO
+LESIZE,ALL,,,nVoly
+
+LSEL,ALL 					! Select all lines in the model
+LMESH,ALL					! Mesh all lines
+
+ASEL,ALL 					! Select all areas in the model
+MSHKEY,1
+AMESH,ALL					! AMESH, NA1, NA2, NINC Mesh areas from NA1 to NA2 (defaults to NA1) in steps of NINC (defaults to 1)
+
+!----Merge nodes at same position - coupling
+NSEL,ALL
+ASEL,ALL
+NUMMRG,ALL
+NUMMRG,KP
+NUMMRG,NODES
+
+!---Plot nodes and elements
+nplot
+/PNUM,NODE,0
+/PNUM,ELEM,0
+eplot
+
+

@@ -1,0 +1,67 @@
+!---Plot modes for the whole system
+
+!-----Mode 1
+/PNUM,ELEM,0
+eplot  
+/POST1  
+SET,LIST
+SET,FIRST   
+!SET,next  
+PLDISP,1
+/EFACET,1   
+PLNSOL, U,SUM, 1,1.0
+!---------------------------------------------------------------------------!
+!---------------------------------------------------------------------------!
+!---------------------------------------------------------------------------!
+
+/VIEW,1,1,2,3   
+/ANG,1,-120,XS,1 
+/REP,FAST
+/ANG,1,-60,YS,1 
+/REP,FAST
+/ANG,1,-10,ZS,1 
+/REP,FAST  
+/ANG,1,30,XS,1 
+/REP,FAST 
+                                                         
+/NUM,1                                                                          
+/PNUM,MAT,1                                                                     
+/REP,FAST
+!/IMAGE, SAVE, ftyp%ftyp%_ModAn_%ModAn%, JPEG, --
+!/MKDIR,SAVE_FIG
+!/INPUT,'fn_post\Save_Plot','mac'
+
+!---------------------------------------------------------------------------!
+!---------------------------------------------------------------------------!
+!---------------------------------------------------------------------------!
+*do,i_mode,1,n_modes,delta_mode_extract
+SET,LIST,999
+SET,,, ,,, ,i_mode  
+/EFACET,1   
+PLNSOL, U,SUM, 0,1.0
+/INPUT,'fn_post\Save_Plot','mac'
+*enddo  
+
+!/INPUT,'fn_post\Save_Plot','mac'
+! ---Display and Animate Current Mode Shapes---!
+!PLDI,1, 
+!ANMODE,20,0.05, ,0  
+!*  
+!/ANFILE,SAVE,'ex_mod_sim_1','avi',' ' 
+
+/MKDIR,Results_Ansys\Results_Modal\ftyp_%ftyp%_ModAn_%ModAn%_Vs_%Vs%
+!!!!!!!!---save eigenfrequencies to freqvec.txt--- !
+/output,Results_Ansys\Results_Modal\ftyp_%ftyp%_ModAn_%ModAn%_Vs_%Vs%\freqvec,csv
+set,list
+/output,term
+!MODES=30
+! ---save eigenvectors to modes.txt--- !
+!nsel,s,node,,all !output results for all nodes
+!/output,Results_Ansys\Results_Modal\ftyp_%ftyp%_ModAn_%ModAn%_Vs_%Vs%\modes,csv
+!*do,i,1,n_modes !output the n_modes first modes
+!set,,i
+!prdisp
+!*enddo
+!/output,term
+
+FINISH 										! Finish and Exit Postprocessor

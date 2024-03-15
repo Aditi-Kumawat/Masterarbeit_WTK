@@ -1,0 +1,91 @@
+!Create MASS21 at origin.
+KNODE,,n_buil_base          !n_buil_base is defined in CM_matrix27.mac
+NUMMRG,KP
+ET,4,MASS21
+KEYOPT,4,3,0 				!3D mass with rotary inertia, check mass21,
+R,4,M_X,M_Y,M_Z,Ix,Iy,Iz 	!MASSX, MASSY, MASSZ, IXX, IYY, IZZ, if KEYOPT (3) = 0
+KATT,0,4,4,
+KSEL,S,LOC,Z,0
+KMESH,ALL
+KSEL,ALL
+NUMMRG,NODE
+
+!Define MATRIX27 element
+!Define the stiffness matrix
+
+ET,5,MATRIX27				  
+KEYOPT,5,1,1
+KEYOPT,5,2,0
+KEYOPT,5,3,4
+KEYOPT,5,4,1
+R,5,Ka_11,0,0,0,Ka_15,0,                    ! C1 to C6
+RMORE,-Ka_11,0,0,0,-Ka_15,0,                ! C7 to C12
+
+RMORE,Ka_22,0,Ka_24,0,0,0,            		! C13 to 18
+RMORE,-Ka_22,0,-Ka_24,0,0,Ka_33,        	! C19 to 24
+
+RMORE,0,0,0,0,0,-Ka_33,        		        ! C25 to 30
+RMORE,0,0,0,Ka_44,0,0,            		    ! C31 to 36
+
+RMORE,0,-Ka_24,0,-Ka_44,0,0,           		! C37 to 42
+RMORE,Ka_55,0,-Ka_15,0,0,0,                 ! C43 to 48
+
+RMORE,-Ka_55,0,Ka_66,0,0,0,         		! C49 to 54
+RMORE,0,0,-Ka_66,Ka_11,0,0,          		! C55 to 60
+
+RMORE,0,Ka_15,0,Ka_22,0,Ka_24,          	! C61 to 66
+RMORE,0,0,Ka_33,0,0,0, 			 			! C67 to 72
+
+RMORE,Ka_44,0,0,Ka_55,0,Ka_66,          	! C73 to 78
+
+
+
+!Define the damping matrix
+
+ET,6,MATRIX27                 
+KEYOPT,6,1,1
+KEYOPT,6,2,0
+KEYOPT,6,3,5
+KEYOPT,6,4,1
+R,6,Ca_11,0,0,0,Ca_15,0,          ! C1 to C6
+RMORE,-Ca_11,0,0,0,-Ca_15,0,        ! C7 to C12
+
+RMORE,Ca_22,0,Ca_24,0,0,0,          ! C13 to 18
+RMORE,-Ca_22,0,-Ca_24,0,0,Ca_33,    ! C19 to 24
+
+RMORE,0,0,0,0,0,-Ca_33,             ! C25 to 30
+RMORE,0,0,0,Ca_44,0,0,              ! C31 to 36
+
+RMORE,0,-Ca_24,0,-Ca_44,0,0,        ! C37 to 42
+RMORE,Ca_55,0,-Ca_15,0,0,0,         ! C43 to 48
+
+RMORE,-Ca_55,0,Ca_66,0,0,0,         ! C49 to 54
+RMORE,0,0,-Ca_66,Ca_11,0,0,         ! C55 to 60
+
+RMORE,0,Ca_15,0,Ca_22,0,Ca_24,      ! C61 to 66
+RMORE,0,0,Ca_33,0,0,0,              ! C67 to 72
+
+RMORE,Ca_44,0,0,Ca_55,0,Ca_66,      ! C73 to 78
+
+
+
+!put the matrix27 to the correct group of node that we defined in "CM_matrix27.mac"
+
+CMSEL,ALL
+CMSEL,S,node_K,NODE
+TYPE,5
+REAL,5
+EINTF,.12,,LOW,,,,,0
+CMSEL,ALL
+
+
+CMSEL,S,node_D,NODE
+TYPE,6
+REAL,6
+EINTF,.12,,LOW,,,,,0 
+CMSEL,ALL
+
+NSEL,ALL
+NUMMRG,KP
+NUMMRG,NODE
+NUMMRG,ELEM

@@ -1,0 +1,123 @@
+!!!!!! Either use read input from or paste the following file in the command 
+!!!!!! line starting with /INPUT
+!---------------------------------------------------------------------------!
+!---------------------------------------------------------------------------! 
+!!!!!! ftyp: foundation for the input building can be a footing or plate foundation
+!---------------------------------------------------------------------------!
+!---------------------------------------------------------------------------! 
+/CLEAR,NOSTART  ! Clear model since no SAVE found  
+
+!---------------------------------------------------------------------------!
+!---------------------------------------------------------------------------! 
+!ftyp='PLATE'
+ftyp='FOOTING'
+!---------------------------------------------------------------------------!
+!-----------------------------Harmonic Analysis-----------------------------!
+StarFreq=0               
+FreqIncr=0.2       ! Frequeny Increment                                     
+EndFreq=100
+!---------------------------------------------------------------------------!
+!---------------------------------------------------------------------------!
+
+DRtype = 'vary'   !select ths one for looping the damping ratio
+!DRtype = 'fix'	  !select ths one for constant damping ratio
+
+!---------------------------------------------------------------------------!
+!---------------------------------------------------------------------------! 
+/INPUT,'fn_pre\Pre_Para_main','mac'
+/INPUT,'fn_fndtn_para\fndn_para_cnstvals_FULL','mac'   !matrix27 used
+
+
+
+*IF,DRtype,EQ,'vary',THEN
+	!Loop over DMPART from 0.1 to 1.0
+
+	*do,iDR,1,10,1 
+		!*DIM,DR,TABLE,10,2
+		!*VREAD,DR(1,0),'DAMPR','txt','fn_pre\RANDOM_INPUT\',jik,2,10,1
+		!(1x,E14.7, 1x,E14.7)
+		!*SET,D_bl, DR(iDR,1)
+
+		*DIM,DR,ARRAY,10,1
+		*VREAD,DR(1,1),'DAMPR','txt','fn_pre\RANDOM_INPUT\',jik,1,10,1
+		(1x,E14.7)
+		*SET,D_bl, DR(iDR,1)
+		
+		
+		!---------------------------------------------------------------------------!
+		!---------------------------------------------------------------------------!
+		!---------------------------------------------------------------------------!
+		*IF,ftyp,EQ,'FOOTING',THEN
+			/INPUT,'fn_pre\Pre_BldMod_FootingFndtn','mac'
+		*ELSEIF,ftyp,EQ,'PLATE'
+			/INPUT,'fn_pre\Pre_BldMod_PlateFndtn','mac'
+		*ENDIF
+		!/eof
+		!---------------------------------------------------------------------------!
+		!---------------------------------------------------------------------------!
+		!----------------------------Define Matrix27 -------------------------------!
+		/INPUT,'fn_pre\Pre_CM_colbase_M27','mac'						
+		/INPUT,'fn_pre\Pre_M27_Full','mac'		
+		!---------------------------Constraints for the LPM-------------------------!
+		/INPUT,'fn_pre\Pre_Load_BCs','mac'				
+		!/eof
+		!---------------------------------------------------------------------------!
+		!---------------------------------------------------------------------------!
+		
+		/INPUT,'fn_analysis\Analysis_TranFunc_VH','mac'
+		!---------------------------------------------------------------------------!
+		!---------------------------------------------------------------------------!
+		!---------------------------------------------------------------------------!
+		
+		!if looping the DR, please comment "Settings_Export_Pictures" macro
+		!/INPUT,'fn_post\Settings_Export_Pictures','mac' 
+		
+		!"post_F_Indepn_TF" cannot be used with "post_vary_damp" at the same time,
+		! Othewise the storing varaiable will be replaced and Warning pop up.
+		!/INPUT,'fn_post\post_F_Indepn_TF','mac'											
+		
+		
+		!---eclectic case for uniform slab of 5mx5m and picking results at y=7.5m---!
+		!----------------for comparison with the nonuni slab case-------------------!
+		/INPUT,'fn_post\post_vary_damp','mac'
+		/CLEAR
+		PARRES
+		
+		
+	*enddo
+	
+*ELSEIF,DRtype,EQ,'fix'	
+	D_bl = 0.01
+	
+	
+	!---------------------------------------------------------------------------!
+	!---------------------------------------------------------------------------!
+	!---------------------------------------------------------------------------!
+	*IF,ftyp,EQ,'FOOTING',THEN
+		/INPUT,'fn_pre\Pre_BldMod_FootingFndtn','mac'
+	*ELSEIF,ftyp,EQ,'PLATE'
+		/INPUT,'fn_pre\Pre_BldMod_PlateFndtn','mac'
+	*ENDIF
+	!/eof
+	!---------------------------------------------------------------------------!
+	!---------------------------------------------------------------------------!
+	!----------------------------Define Matrix27 -------------------------------!
+	/INPUT,'fn_pre\Pre_CM_colbase_M27','mac'						
+	/INPUT,'fn_pre\Pre_M27_Full','mac'		
+	!---------------------------Constraints for the LPM-------------------------!
+	/INPUT,'fn_pre\Pre_Load_BCs','mac'				
+	!/eof
+	!---------------------------------------------------------------------------!
+	!---------------------------------------------------------------------------!
+	
+	
+	/INPUT,'fn_analysis\Analysis_TranFunc_VH','mac'
+	!---------------------------------------------------------------------------!
+	!---------------------------------------------------------------------------!
+	!---------------------------------------------------------------------------!
+	!/INPUT,'fn_post\Settings_Export_Pictures','mac'
+	!/INPUT,'fn_post\post_F_Indepn_TF','mac'
+	!---eclectic case for uniform slab of 5mx5m and picking results at y=7.5m---!
+	!----------------for comparison with the nonuni slab case-------------------!
+	/INPUT,'fn_post\post_vary_damp','mac'	
+*ENDIF

@@ -1,0 +1,18 @@
+!This file only create group of nodes for access matrix27 element
+!Since the stiffness and damping have to define seperately, so create two groups of node, 
+!node_K for stiffness element
+!node_D for damping element
+!------------------creating a group to define building base-------------------!
+NSEL,S,LOC,Z,0
+CM, n_buil_base, NODE       
+D,n_buil_base,rotx,0
+D,n_buil_base,roty,0
+D,n_buil_base,rotz,0
+NSEL,ALL
+*GET,n_count,NODE,0,COUNT
+NGEN,2,n_count,n_buil_base,,,0,0,-.1
+CM,node_K,NODE
+CM,node_D,NODE
+CMSEL,all
+NSEL,ALL 
+NUMMRG,NODE
