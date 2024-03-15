@@ -16,6 +16,8 @@ x0 = uniform(-0.1, 0.1, N)
 def cost(x):
     return (x @ H @ x) / (x @ x)
 controller = ThreadpoolController()
+
+
 for i in range(1, 5):
     t0 = time.time()
     with controller.limit(limits=i, user_api='blas'):

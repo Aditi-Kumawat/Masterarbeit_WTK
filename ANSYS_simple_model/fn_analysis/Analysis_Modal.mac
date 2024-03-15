@@ -1,0 +1,20 @@
+!---Modal Analysis
+
+/SOLU 
+!*
+ANTYPE,2
+!*  
+!*  
+MODOPT,LANB,n_modes   
+EQSLV,SPAR  
+MXPAND,n_modes, , ,0  
+LUMPM,0 
+PSTRES,0
+!*  
+MODOPT,LANB,n_modes,Star_ModeFreq,End_ModeFreq, ,OFF   
+/STATUS,SOLU
+SOLVE   
+FINISH
+
+
+

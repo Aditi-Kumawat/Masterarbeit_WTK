@@ -1,0 +1,57 @@
+!---------------------Material Parameters---------------------!
+!-------------------------------------------------------------!                                                                                        
+rho_col=2500 	            ![kg/m^3] !Material of the columns   
+E_col=30e9	                ![N/m^2]
+nu_col=0.27
+
+rho_beam=2500
+E_beam=30e9
+nu_beam=0.27
+
+rho_floor=2500
+E_floor=30e9
+nu_floor=0.27
+!--------------------------------------------------------------!
+!----------------------Dimensions of room----------------------!
+l=5
+b=4
+h=3
+!--------------------------------------------------------------!
+!-----------------------Columns section -----------------------!
+b_col=0.3
+h_col=0.3
+!--------------------------------------------------------------!
+!------------------------Beams section ------------------------!
+h_beam=0.3 
+b_beam=0.3
+!--------------------------------------------------------------!
+!----------------------Number of storeys-----------------------!
+n_storeys=2
+!-----------------Number of rooms in x and y-------------------!
+n_roomsx=2
+n_roomsy=3
+!--------------------------------------------------------------!
+!----------------------Floor thickness-------------------------!
+t_floor1=0.2
+!--------------------------------------------------------------!
+!-------------------------Element Size-------------------------!
+n_ele_size=0.5
+!--------------------------------------------------------------!
+!-----------------------Soil properties------------------------!
+Vs=450          !Shear wave velocity [m/s]
+Rho=2.3e3       !Soil density [kg/m^3]
+Nu=0.33         !Soil Poisson's Ratio
+!--------------------------------------------------------------!
+!---------------------Foundation dimensions--------------------!
+L_f=0.75        !Foundation half-length [m]
+B_f=0.75        !Foundation half-width [m]
+*IF,ftyp,EQ,'PLATE',THEN
+L_f=n_ele_size/2        !Foundation half-length [m]
+B_f=n_ele_size/2        !Foundation half-width [m]
+*ENDIF
+
+!*************************Footing Foundation*************************!
+!---Number of Elements                                                                      
+nVolx=l/n_ele_size                      ! Anzahl VolElemente in x-Richtung                  
+nVoly=(l+2)/n_ele_size                      ! Anzahl VolElemente in y-Richtung                  
+nVolz=h/n_ele_size                      ! Anzahl VolElemente in y-Richtung  

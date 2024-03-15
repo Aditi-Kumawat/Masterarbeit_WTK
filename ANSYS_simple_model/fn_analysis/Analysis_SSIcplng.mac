@@ -1,0 +1,41 @@
+!********************************************************************************!FD
+!* FREQUENZ - BEREICH           FREQUENZ - BEREICH           FREQUENZ - BEREICH *!FD
+!********************************************************************************!FD
+									         !FD
+!**************************** Eingaben Frequenzbereich **************************!FD
+!********************************************************************************!FD
+ nfreq=((EndFreq-StarFreq)/FreqIncr)+1               ! Anzahl der zu berechnenden Frequenzen                 !FD
+!********************************************************************************!FD
+!********************************************************************************!FD
+!*---------------------------LösungsTeil----------------------------------------*!FD
+/SOLU                       ! Aufruf des Solution-Processors			 !FD
+ANTYPE,HARMIC               ! Harmonische Analyse				 !FD
+OUTRES,ALL,NONE		    	! To select specific results, deactivate all         !FD
+OUTRES,NSOL,1	            ! Activate node solution    		         !FD
+OUTRES,STRS 		   		! Activate stress solution				 !FD
+OUTRES,EPEL 		    	! Activate strain solution  			 !FD
+OUTRES,ESOL 		    	! Activate element solution				 !FD
+OUTRES,RSOL 		    	! Activate reaction forces 				 !FD
+!********************************************************************************!FD
+!********************************************************************************!FD
+                                                                                 !FD
+NSEL,All  									 !FD
+DMPRAT, D_bl       !DMPRAT cannot work here!
+
+!*------------Frequenzschleife---------                                          !FD
+   *do,ifreq,1,nfreq,1                                                           !FD
+       freq = StarFreq+(ifreq-1)*FreqIncr
+       TF_input=1                                	 !FD
+       D,n_buil_base,UX,TF_input
+       D,n_buil_base,UY,TF_input
+	   D,n_buil_base,UZ,TF_input
+!	SFA,a_load,1,PRES,PVal
+	    *MSG,WARN, ifreq, nfreq, freq,
+	    *** Step %I von %I - Frequenz %G
+ 
+       HARFRQ,freq,freq,     ! aktuelle Frequenz setzen                          !FD
+       NSUBST,1,             ! keine weitere FrequenzUnterteilung                !FD
+       SOLVE                 ! selbstredend					 !FD
+       SAVE                  ! Speichern in database				 !FD
+   *enddo                                                                        !FD
+FINISH ! Solution-Processor                                                      !FD            

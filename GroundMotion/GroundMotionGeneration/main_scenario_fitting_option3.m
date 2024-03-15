@@ -102,10 +102,10 @@ num = length(VarsTable.Event);
 
 %LME_lnPGA = fitlme(VarsTable,'lnPGA ~  M + LnDis + (LnDis|Event)');
 %LME_lnPGA = fitlme(VarsTable,'lnPGA ~  M + R + D + (R|Event)')
-%LME_lnPGA = fitlme(VarsTable,'lnPGA ~  M + R + D + (R|Event)');
-LME_lnWc = fitlme(VarsTable, 'Wc     ~  R +  Wg + ( R|Event)+  ( Wg|Event)')
+LME_lnPGA = fitlme(VarsTable,'lnPGA ~  M + LnR + Wg + (LnR|Event) + (Wg|Event)')
+LME_lnWc = fitlme(VarsTable, 'Wc     ~ M +  R +  Wg + ( R|Event)+  ( Wg|Event)')
 % Beta should be fixed 
-LME_lnBeta = fitlme(VarsTable,'DRg  ~  D');
+LME_lnBeta = fitlme(VarsTable,'DRg  ~  M +  R +  Wg + ( R|Event)+  ( Wg|Event)')
 
 %% Residuals and correaltion 
 % Concatenate the residuals into a single matrix
@@ -141,7 +141,7 @@ disp(chol_matrix);
 
 %fns_plotResidual_events(LME_lnBeta)
 
-fns_visualized_fitting(LME_lnPGA, VarsTable, VarsTable.PGA, [0.5, 1, 1.5, 1.2, 0.5], [7.0, 9.5, 12.0, 8.0, 10])
+%fns_visualized_fitting(LME_lnPGA, VarsTable, VarsTable.PGA, [0.5, 1, 1.5, 1.2, 0.5], [7.0, 9.5, 12.0, 8.0, 10])
 
 %% X dir:
 % Wg ~normal
@@ -171,9 +171,6 @@ fns_visualized_fitting(LME_lnPGA, VarsTable, VarsTable.PGA, [0.5, 1, 1.5, 1.2, 0
 %hold on 
 %histogram(a, 50)
 
-Testing= table(Info_matrix(:,10), Info_matrix(:,1), log(distance), distance, Info_matrix(:,2),Info_matrix(:,3),log(Info_matrix(:,4)),...
-            Info_matrix(:,5),log(Info_matrix(:,6)),log(Info_matrix(:,7)),...
-    'VariableNames',{'Event','M','LnDis','Dis','D','R','lnPGA','Wg','DRg','Wc'});
 
 %num_1 = length(Info_matrix(:,10));
 %Testing.M = 0.3 * ones(num_1,1);

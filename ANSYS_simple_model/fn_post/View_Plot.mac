@@ -1,0 +1,14 @@
+/VIEW,1,1,2,3   
+/ANG,1,-120,XS,1 
+/REP,FAST
+/ANG,1,-60,YS,1 
+/REP,FAST
+/ANG,1,-11,ZS,1 
+/REP,FAST  
+/ANG,1,30,XS,1 
+/REP,FAST
+
+!/POST1
+!eplot
+!/ESHAPE,1 ! Display element shapes using section data
+!/DSCALE,ALL,1 ! Plot using true scale  
