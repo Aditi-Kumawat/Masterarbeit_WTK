@@ -6,10 +6,10 @@ addpath("C:\Users\v196m\Desktop\master_project\Masterarbeit\GroundMotion\GroundM
 
 
 TEST_CASE = 1;
-NumDOE = 1000;
+NumDOE = 200;
 NumVar = 6;
 dir = 'Z';
-valid_point = 200;
+valid_point = 150;
 
 %Learning_type = 'TR';
 Learning_type = 'VAL';

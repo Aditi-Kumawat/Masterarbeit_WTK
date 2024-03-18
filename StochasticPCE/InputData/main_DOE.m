@@ -4,7 +4,7 @@ clc;
 %% Set the number of samples
 TEST_CASE = 1;
 dir = 'Z';
-numSamples = 1000;
+numSamples = 600;
 numVars = 6;
 
 %Learning_type = 'TR';
