@@ -29,7 +29,8 @@
 3. Config file
    - Input: 
      - TEST ID
+     - Num of samples
    - Output file name example
-     - config_SDOF_ SBAGM_ (ID)
-     - i.e. config_SDOF_SBAGM_5.json
+     - config_SDOF_ SBAGM_ (ID) _ DOE _ (Num samples) . json
+     - i.e. config_SDOF_SBAGM_5_DOE_1000.json
 
