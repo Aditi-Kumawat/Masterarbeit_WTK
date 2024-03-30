@@ -204,8 +204,8 @@ function Y = SDOF_simulation(X,output_type,fixpoint)
        Wn = 2*pi*X.Wb;
        %DR = 0.05;
        DR = X.beta;
-       Y = zeros(length(X.lnPGA),1);
- 
+       %Y = zeros(length(X.lnPGA),1);
+       Y = zeros(500,1);
        if strcmp(output_type,"rand") 
            %figure
            for i = 2:501
@@ -249,7 +249,7 @@ function Y = SDOF_simulation(X,output_type,fixpoint)
                Resp_ifft = ifft(Resp_f_pad*Fs, L, 1, 'symmetric');
                Resp_ifft = Resp_ifft(1:L,:)/Fs;
            
-               Y(i) = log(max(abs(Resp_ifft))); 
+               Y(i-1) = log(max(abs(Resp_ifft))); 
            end
 
        elseif strcmp(output_type,"fix")
@@ -293,7 +293,7 @@ function Y = SDOF_simulation(X,output_type,fixpoint)
                Resp_ifft = ifft(Resp_f_pad*Fs, L, 1, 'symmetric');
                Resp_ifft = Resp_ifft(1:L,:)/Fs;
            
-               Y(i) = log(max(abs(Resp_ifft))); 
+               Y(i-1) = log(max(abs(Resp_ifft))); 
            end
        end
 
