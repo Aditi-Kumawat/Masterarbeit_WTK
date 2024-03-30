@@ -1,0 +1,72 @@
+!---------------------Material Parameters---------------------!
+!-------------------------------------------------------------!                                                                                        
+rho_col=2500 	            ![kg/m^3] !Material of the columns   
+E_col= E_bl                 ![N/m^2] 30e9
+nu_col=0.27
+
+rho_beam=2500
+E_beam= E_bl 
+nu_beam=0.27
+
+rho_floor=2500
+E_floor= E_bl 
+nu_floor=0.27
+!--------------------------------------------------------------!
+!----------------------Dimensions of room----------------------!
+l=5
+b=4
+h=3
+!--------------------------------------------------------------!
+!-----------------------Columns section -----------------------!
+b_col=0.3
+h_col=0.3
+!--------------------------------------------------------------!
+!------------------------Beams section ------------------------!
+h_beam=0.3 
+b_beam=0.3
+!--------------------------------------------------------------!
+!----------------------Number of storeys-----------------------!
+n_storeys=3
+!-----------------Number of rooms in x and y-------------------!
+n_roomsx=3
+n_roomsy=4
+!--------------------------------------------------------------!
+!----------------------Floor thickness-------------------------!
+t_floor1=0.2
+t_wall = 0.1
+!--------------------------------------------------------------!
+!-------------------------Element Size-------------------------!
+n_ele_size=0.5
+!--------------------------------------------------------------!
+!-----------------------Soil properties------------------------!
+Vs=450          !Shear wave velocity [m/s]
+Rho=2.3e3       !Soil density [kg/m^3]
+Nu=0.33         !Soil Poisson's Ratio
+!--------------------------------------------------------------!
+!---------------------Foundation dimensions--------------------!
+L_f=0.75        !Foundation half-length [m]
+B_f=0.75        !Foundation half-width [m]
+*IF,ftyp,EQ,'PLATE',THEN
+L_f=n_ele_size/2        !Foundation half-length [m]
+B_f=n_ele_size/2        !Foundation half-width [m]
+*ENDIF
+
+!*************************Footing Foundation*************************!
+!---Number of Elements                                                                      
+nVolx=l/n_ele_size                      ! Anzahl VolElemente in x-Richtung                  
+nVoly=(l+2)/n_ele_size                      ! Anzahl VolElemente in y-Richtung    !nVoly=b/n_ele_size                  
+     
+nVolz=h/n_ele_size                      ! Anzahl VolElemente in y-Richtung  
+
+
+
+!****************************Geometry*******************************!
+
+*DIM, coordinates_x, ARRAY, 20 ,1
+!                        1             2            3                   4                   5                       
+*SET, coordinates_x(1,1),0,-1,-1,18.78,0,5,5,7.6603,0,1.6,3.3756,6.0359,0,1.6,3.4,4.9416
+*SET, coordinates_x(17,1),0,-1,-1,3.5373
+*DIM, coordinates_y, ARRAY, 20 ,1
+!                        1        2                      3                 4                        5                       
+*SET, coordinates_y(1,1),0,0,0,0,4.65,4.65,11.95,13.9893,14,14,14,16.0329,16.25,16.25,16.25,17.4096
+*SET, coordinates_y(17,1),19.1763,19.1763,19.1763,19.1763

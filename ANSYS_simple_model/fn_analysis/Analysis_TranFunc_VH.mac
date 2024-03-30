@@ -28,7 +28,7 @@ DMPRAT, D_bl       !DMPRAT cannot work here!
 *VREAD,VT1(1,0),'FRF_input','txt','fn_pre\FRF_Load\',jik,2,101,1
 (1x,E14.7,1x,E14.7)
 VT1(0,1) = 1.0
-*VPLOt,VT1(1,0),VT1(1,1)
+!*VPLOt,VT1(1,0),VT1(1,1)
 
 
 HARFRQ,0.01,100

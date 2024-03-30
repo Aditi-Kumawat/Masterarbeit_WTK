@@ -1,0 +1,55 @@
+!This file only create group of nodes for access matrix27 element
+!Since the stiffness and damping have to define seperately, so create two groups of node, 
+!node_K for stiffness element
+!node_D for damping element
+!------------------creating a group to define building base-------------------!
+
+!*DO, i_kp, 0, n_roomsy, 1 !n_roomsy=4
+!    *DO, j_kp, 0, n_roomsx, 1 !n_roomsx=3
+!        n_coor = (i_kp*(n_roomsx + 1))+j_kp +1
+!        l=coordinates_x(n_coor,1)
+!        NSEL,ALL
+!        NSEL,S,LOC,Z,0
+!        *if,l,GE,0,THEN    
+!            b=coordinates_y(n_coor,1)
+!            NSEL,R,LOC,X,l
+!            NSEL,R,LOC,Y,b
+!            CM,col_base%i_kp%%j_kp%,NODE
+!            D,col_base%i_kp%%j_kp%,rotx,0
+!            D,col_base%i_kp%%j_kp%,roty,0
+!            D,col_base%i_kp%%j_kp%,rotz,0
+!        *endif    
+!    *ENDDO
+!*ENDDO
+
+
+!*DO,j,0,n_roomsx
+!    *DO,i,0,n_roomsy
+!        NSEL,ALL
+!        NSEL,S,LOC,Z,0
+!        !NSEL,R,LOC,X,j*l
+!        !NSEL,R,LOC,Y,i*b
+!        CM,col_base%i%%j%,NODE
+!        D,col_base%i%%j%,rotx,0
+!        D,col_base%i%%j%,roty,0
+!        D,col_base%i%%j%,rotz,0
+!    *ENDDO
+!*ENDDO
+
+NSEL,ALL
+
+NSEL,S,LOC,Z,0
+CM, n_buil_base, NODE  
+
+D,n_buil_base,rotx,0
+D,n_buil_base,roty,0
+D,n_buil_base,rotz,0  
+
+NSEL,ALL
+*GET,n_count,NODE,0,COUNT
+NGEN,2,n_count,n_buil_base,,,0,0,-.1
+CM,node_K,NODE
+CM,node_D,NODE
+CMSEL,all
+NSEL,ALL 
+NUMMRG,NODE
