@@ -9,21 +9,26 @@ TEST_CASE = 2;
 NumDOE = 1000;
 NumVar = 6;
 dir = 'Z';
-valid_point = 125;
+valid_point = 950;
 
 Learning_type = 'TR';
 %Learning_type = 'VAL';
 
 % Only use for output, irrelvent to input
-output_type = "rand";
-%output_type = "fix";
+%output_type = "rand";
+output_type = "fix";
 
 DOE_file_name = sprintf('TEST%d_X_SBAGM_V%d_%s_DOE_%d_DIR_%s.mat',TEST_CASE,NumVar,Learning_type,NumDOE,dir);
 DOE_path =['C:\Users\v196m\Desktop\master_project\Masterarbeit\StochasticPCE\InputData\',DOE_file_name];
 X = load(DOE_path);
 
+%MODIFY
+%Learning_type = 'VAL';
+
 if strcmp(output_type, 'rand')
+
     output_file_name = sprintf('TEST%d_Y_SBAGM_V%d_%s_RAND_DOE_%d_DIR_%s.mat',TEST_CASE,NumVar,Learning_type,NumDOE,dir);
+    
 elseif strcmp(output_type, 'fix')
     output_file_name = sprintf('TEST%d_Y_SBAGM_V%d_%s_FIX%d_DOE_%d_DIR_%s.mat',TEST_CASE,NumVar,Learning_type,valid_point,NumDOE,dir);
 end
@@ -158,7 +163,7 @@ elseif strcmp(output_type,"fix")
     X_valid.beta = exp(-3.2+0.1*Valid_point_1(:,6));
 
     Y = SDOF_simulation(X_valid,'fix',valid_point);
-    %save(output_path ,'Y','-mat');
+    save(output_path ,'Y','-mat');
 end
 
 
@@ -208,7 +213,8 @@ function Y = SDOF_simulation(X,output_type,fixpoint)
        Y = zeros(500,1);
        if strcmp(output_type,"rand") 
            %figure
-           for i = 2:501
+  %MODIFY
+           for i = 501:1000
                disp(['Case ',num2str(i)])
                disp(['     Parameter: W_g = ',num2str(W_g(i)), ',W_c = ',num2str(W_c_ratio(i))])
                disp(['     Parameter: PGA = ',num2str(PGA(i)), ',W_n = ',num2str(Wn(i))])
@@ -248,8 +254,9 @@ function Y = SDOF_simulation(X,output_type,fixpoint)
                Resp_f_pad = [Resp_f; conj(flipud(Resp_f(2:end-1,:)))];
                Resp_ifft = ifft(Resp_f_pad*Fs, L, 1, 'symmetric');
                Resp_ifft = Resp_ifft(1:L,:)/Fs;
-           
-               Y(i-1) = log(max(abs(Resp_ifft))); 
+                
+ %MODIFY
+               Y(i-500) = log(max(abs(Resp_ifft))); 
            end
 
        elseif strcmp(output_type,"fix")
@@ -261,7 +268,7 @@ function Y = SDOF_simulation(X,output_type,fixpoint)
            path = fullfile(folder_name,file_name );
            FRF = readtable(path);
 
-           for i = 2:501
+           for i = 501:1000
                disp(['Case ',num2str(i)])
                disp(['     Parameter: W_g = ',num2str(W_g(i)), ',W_c = ',num2str(W_c_ratio(i))])
                disp(['     Parameter: PGA = ',num2str(PGA(i)), ',W_n = ',num2str(Wn(i))])
@@ -293,7 +300,7 @@ function Y = SDOF_simulation(X,output_type,fixpoint)
                Resp_ifft = ifft(Resp_f_pad*Fs, L, 1, 'symmetric');
                Resp_ifft = Resp_ifft(1:L,:)/Fs;
            
-               Y(i-1) = log(max(abs(Resp_ifft))); 
+               Y(i-500) = log(max(abs(Resp_ifft))); 
            end
        end
 
