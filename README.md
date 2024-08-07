@@ -32,7 +32,7 @@ Finally, the significance of each input seismic parameter will be analyzed using
 analysis, and the potential damage and adverse effects on residents will be evaluated
 using serviceability and comfortability analysis.
 
-## Discription: 
+## Description: 
 
 This is the source code for master thesis.
 
@@ -40,7 +40,7 @@ Please contact Wei-Teng, Kao via ge32gak@mytum.de for further information.
 
 In the repo, there are three main parts, which are:
 
-1. [Scenario based ground motion generator (SBGMG)](./GroundMotion/)
+1. [Scenario based ground motion generator (SBGMG)](./GroundMotion/GroundMotionGeneration/)
 2. [Stochastic polynomial chaos expansion (SPCE)](./StochasticPCE/)
 3. [Bulding's model written in ANSYS APDL](./ANSYS_simple_model/)
 
