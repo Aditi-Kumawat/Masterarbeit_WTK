@@ -14,7 +14,6 @@ from skopt import gp_minimize
 from skopt.space import Real
 import math
 import datetime
-import time
 import os
 #from scipy.optimize import differential_evolution
 from scipy.stats import wasserstein_distance
@@ -456,7 +455,6 @@ class StochasticPCE:
                         record_p = p
                         record_q = q
                         record_min_error = error_corr
-                        record_min_error_loo = err_loo
                         record_SparseOrderTable = SparseOrderTable
                         record_coeffs = Coeffs
                         err_loo_min = err_loo
@@ -483,7 +481,6 @@ class StochasticPCE:
                         break  # Move to the next row_to_find
                     
             self.error_corr = record_min_error
-            self.error_loo = err_loo
             self.SparseOrderTable = record_SparseOrderTable 
             self.coeffs = record_coeffs 
             self.active_list = record_active_list 
@@ -498,22 +495,18 @@ class StochasticPCE:
                 print(f"    Stop Criteria: Corrected Error <= {tol_err}")
                 print(f"    Result: poly_degree: {record_p}, truncate_q: {record_q}")
                 print(f"            Corrected Error: {error_corr}")
-                print(f"            LOOCV Error (std dev): {err_loo}")
-
             
             elif self.overfit:
                 print("Building Surrogate Model, Not Converge")
                 print(f"    Stop Criteria: Overfitting")
                 print(f"    Result: poly_degree: {record_p}, truncate_q: {record_q}")
                 print(f"            Corrected Error: {self.error_corr}")
-                print(f"            LOOCV Error (std dev): {self.error_loo}")
 
             else:
                 print("Building Surrogate Model, Not Converge")
                 print(f"    Stop Criteria: Running all the possible combination. total run: {count}")
                 print(f"    Result: poly_degree: {record_p}, truncate_q: {record_q}")
                 print(f"            Corrected Error: {self.error_corr}")
-                print(f"            LOOCV Error (std dev): {self.error_loo}")
         
             if opt_save_result_:
                 self.Save_result(result_path)
@@ -544,7 +537,7 @@ class StochasticPCE:
         opt_Ns = 8
         opt_NumGP = 25
         opt_numKFold = 4
-        start_time = time.time()
+
         try:
             if 'show_info_' in kwargs:
                 opt_show_info = kwargs['show_info_']
@@ -615,7 +608,7 @@ class StochasticPCE:
                         self.coeffs = Coeffs
                         self.CreateInfoMatrix()
                         
-                        #print(self.A_trunc)
+                        print(self.A_trunc)
 
                         #print(self.coeffs)
 
@@ -634,7 +627,6 @@ class StochasticPCE:
                         # Specify the number of Integration points: p <= 2n − 1
                         # Here we want to intrgral M(x)**2, therefore: 2*max_P <= 2n -1
                         # 0.5*(2*max_P+1) <= int(n), after sorting up: n = max_P +1 
-                        # Here I use much more int points than the requirment
                         num_samp = int(2*max(poly_degree_Z)+1)
 
 
@@ -747,8 +739,7 @@ class StochasticPCE:
                         #gp_result = gp_minimize(BO_hyperparams_objfun, space, n_calls=opt_NumGP)
                         optimizer = Optimizer(
                                     dimensions=[Real(0.1*np.sqrt(err_loo), 1.01*np.sqrt(err_loo) , name='Sigma')],
-                                    base_estimator='gp',
-                                    initial_point_generator = 'lhs'
+                                    base_estimator='gp'
                                 )
                         
                         coeffs_PCE_list = []
@@ -760,14 +751,6 @@ class StochasticPCE:
                             y_gp_obj, coeffs_PCE = zip(*y_Parallel)
                             coeffs_PCE_list.extend(coeffs_PCE)
                             optimizer.tell(x, y_gp_obj)
-
-                        #Single Core testing
-                        #for i in range(54):
-                        #    x = optimizer.ask(n_points=1)
-                        #    y_Parallel = Parallel(n_jobs=1)(delayed(BO_hyperparams_objfun)(v) for v in x)  # evaluate points in parallel
-                        #    y_gp_obj, coeffs_PCE = zip(*y_Parallel)
-                        #    coeffs_PCE_list.extend(coeffs_PCE)
-                        #    optimizer.tell(x, y_gp_obj)
                             
                         self.X = X
                         self.Y = Y
@@ -783,14 +766,8 @@ class StochasticPCE:
                         #print(optimizer.yi)
                         self.coeffs_update = coeffs_PCE_list[best_index]
 
-                        check_time = time.time()
-                        execution_time = check_time - start_time
-
                         print(f"Current optimal Sigma: {Sigma}, N-fold MLE CV score: {NfoldMLE_CVs}")
                         print(f"Optimal Sigma should in the range: ({0.1*np.sqrt(err_loo)}, {1.0*np.sqrt(err_loo)})")
-                        print("#####################################################################################")
-                        print(f"Execution time: {execution_time} seconds, p= {p}, q= {q}.")
-                        print("#####################################################################################")
 
                         #print(self.coeffs_update)
 
@@ -808,36 +785,37 @@ class StochasticPCE:
                                     coeffs_best = self.coeffs_update
                                     A_trunc_best = self.A_trunc
                                     activate_list = self.active_list
-                                    #print(activate_list)
-                                    print("Current Best!")
+                                    print(activate_list)
+                                    print("HAHAHAHAHAH")
                                     print(best_CVs)
                                     print(Z_type_best,p_best,q_best)
 
                             count_q_i = 0
-                            #print(count_q_i)
+                            print(count_q_i)
                         else:
                             if current_p == p:
                                 count_q_i = count_q_i +1
                             else:
                                 count_q_i = 0
                             current_p = p
-                            #print(count_q_i)
+                            print(count_q_i)
                             if count_q_i >= 2:
                                 count_q_i = 0
-                                #print("QQQQQQQQQQQQQQQQQQ")
+                                print("QQQQQQQQQQQQQQQQQQ")
                                 break
 
-                        #print("++++++++++++++++++++")
+                        print("++++++++++++++++++++")
                         print(Z_type , p ,q)
                         print(NfoldMLE_CVs_D,NfoldMLE_CVs_p, NfoldMLE_CVs_q)
-                        #print("++++++++++++++++++++")
+                        print("++++++++++++++++++++")
 
                     if NfoldMLE_CVs_p > NfoldMLE_CVs_p_i:
                         NfoldMLE_CVs_p = NfoldMLE_CVs_p_i
-                        #print("PPPPPPPPPPPPPPPP")
+                        print("PPPPPPPPPPPPPPPP")
                         print("p = ",NfoldMLE_CVs_p )
-                        #print("PPPPPPPPPPPPPPPP")
+                        print("PPPPPPPPPPPPPPPP")
                     else:
+                        print("PPPPPPPPPPPPPPPP")
                         break
 
                 if NfoldMLE_CVs_D > NfoldMLE_CVs_D_i:
@@ -907,6 +885,7 @@ class StochasticPCE:
 
                 print(f"Generate predicted data, X_pred: ({np.shape(X_pred)}, Y_pred: ({np.shape(Y_pred)}).")
                 return  X_pred , Y_pred
+
 
 
             except ValueError as e:
@@ -1017,18 +996,18 @@ class StochasticPCE:
             print("Dont allow the overwrite the variables, predict( ) will not be activated")
 
 
-    def ComputeERROR_WD(self, input_Predict = None, input_realization = None):
+    def ComputeERROR_WD2_SPCE(self, input_Predict_SPCE = None, input_realization = None):
         self.display_line()
         print("Start Compute Wassersein distance.")
 
         try:
-            input_Predict = input_Predict.reshape(-1)
+            input_Predict_SPCE = input_Predict_SPCE.reshape(-1)
             input_realization = input_realization.reshape(-1)
 
             #self.check_shape(np.shape(input_Predict_SPCE),np.shape(input_realization))
             
             # Define the cost matrix using the squared Euclidean distance
-            cost_matrix = cdist(input_Predict[:, np.newaxis], input_realization[:, np.newaxis], 'sqeuclidean')
+            cost_matrix = cdist(input_Predict_SPCE[:, np.newaxis], input_realization[:, np.newaxis], 'sqeuclidean')
 
             # Solve the optimal transport problem using linear_sum_assignment
             row_ind, col_ind = linear_sum_assignment(cost_matrix)
@@ -1037,9 +1016,9 @@ class StochasticPCE:
             qwd = np.sum(cost_matrix[row_ind, col_ind]) / len(input_realization)
             print("Quadratic Wasserstein distance:", qwd/np.var(input_realization))
             # Compute the Wasserstein distance
-            wd = wasserstein_distance(input_Predict, input_realization)
+            wd = wasserstein_distance(input_Predict_SPCE, input_realization)
             print("Wasserstein distance:", wd)
-            return wd, qwd
+
 
         except ValueError as e:
             print(f"Error from Predict(): {e}")
@@ -1202,7 +1181,6 @@ class StochasticPCE:
                             "q":float(self.best_q),
                             "error_corr":self.error_corr,
                             "error_corr_record":self.error_corr_record,
-                            "LOOCV_error":self.error_loo,
                             "converge":self.converge,
                             "overfit":self.overfit      
                                                     
@@ -1244,7 +1222,6 @@ class StochasticPCE:
             self.best_p = loaded_result_data["p"]
             self.best_q = loaded_result_data["q"]
             self.error_corr = loaded_result_data["error_corr"]
-            self.error_loo = loaded_result_data["LOOCV_error"]
             self.converge = loaded_result_data[ "converge"]
             self.overfit = loaded_result_data["overfit"] 
         print(f"Load Result successfully, path: {file_path}")

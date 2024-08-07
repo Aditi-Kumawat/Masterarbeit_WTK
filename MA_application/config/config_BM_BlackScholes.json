@@ -1,0 +1,12 @@
+{
+    "X_path":"C:/Users/v196m/Desktop/master_project/Masterarbeit/StochasticPCE/InputData/BlackScholes_DOE_1000.mat",
+    "X_type":{"x1": "Uniform","x2": "Uniform"},
+    "OrthPolyParams":{},
+    "Z_type": ["Gaussian"],
+    "Solver": "HybridLAR",
+
+    "max_poly_degree":5,
+    "q_norm":[0.75,1.0],
+    "save_result_path":"C:/Users/v196m/Desktop/master_project/Masterarbeit/StochasticPCE"
+	
+}

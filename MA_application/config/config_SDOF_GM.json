@@ -1,5 +1,5 @@
 {
-    "X_path":"C:/Users/Victor Kao/Desktop/Masterarbeit/StochasticPCE/InputData/SDOF_AGM_DOE_1000_test.mat",
+    "X_path":"C:/Users/Victor Kao/Desktop/Masterarbeit/StochasticPCE/InputData/SDOF_AGM_DOE_1000_testing.mat",
     "X_type":{"x1": "Gaussian", "x2": "Gaussian", "x3": "Gaussian", "x4": "Gaussian"},
     "OrthPolyParams":{},
     "Z_type": ["Gaussian"],

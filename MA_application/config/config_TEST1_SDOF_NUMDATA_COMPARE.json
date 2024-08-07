@@ -1,0 +1,12 @@
+{
+    "X_path":"C:/Users/v196m/Desktop/master_project/Masterarbeit/TESTING_ENV/InputData/TEST1_X_SBAGM_V6_TR_DOE_100_DIR_Z.mat",
+    "X_type":{"x1": "Gaussian", "x2": "Uniform", "x3": "Uniform", "x4": "Gaussian", "x5": "Gaussian", "x6": "Gaussian"},
+    "OrthPolyParams":{},
+    "Z_type": ["Gaussian"],
+    "Solver": "HybridLAR",
+
+    "max_poly_degree":3,
+    "q_norm":[1],
+    "save_result_path":"C:/Users/v196m/Desktop/master_project/Masterarbeit/StochasticPCE"
+	
+}

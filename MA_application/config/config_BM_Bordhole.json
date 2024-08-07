@@ -1,0 +1,19 @@
+{
+    "X_path":"C:/Users/v196m/Desktop/master_project/Masterarbeit/StochasticPCE/InputData/Borehole_DOE_500.mat",
+    "X_type":{"x1":"Gaussian",
+	      "x2":"Uniform",
+	      "x3":"Uniform",
+	      "x4":"Uniform",
+	      "x5":"Uniform",
+	      "x6":"Uniform",
+	      "x7":"Uniform",
+	      "x8":"Gaussian"},
+    "OrthPolyParams":{},
+    "Z_type": [],
+    "Solver": "HybridLAR",
+
+    "max_poly_degree":5,
+    "q_norm":[1],
+    "save_result_path":"C:/Users/v196m/Desktop/master_project/Masterarbeit/StochasticPCE"
+	
+}
