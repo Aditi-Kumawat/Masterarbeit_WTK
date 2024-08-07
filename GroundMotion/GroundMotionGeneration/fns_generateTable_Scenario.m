@@ -39,7 +39,8 @@ function  VarTable = fns_generateTable_Scenario(LME_PGA,LME_Wc,M_list,R_list,Wg_
         PGA(i) = PGA_reg(i)+R(1);
         Wc(i) = Wc_reg(i)+R(2);
         
-        while Wc(i) < 0.01 || Wc(i) >= 1 || exp(PGA(i))> 0.05
+        % maximum = 20 mm/s 
+        while Wc(i) < 0.01 || Wc(i) >= 1 || exp(PGA(i))> 0.02*1000
             R = mvnrnd(mu,Cov_matrix ,1);
             PGA(i) = PGA_reg(i)+R(1);
             Wc(i) = Wc_reg(i)+R(2);

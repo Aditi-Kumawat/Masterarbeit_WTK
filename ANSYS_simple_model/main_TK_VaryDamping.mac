@@ -94,6 +94,13 @@ DRtype = 'testing'
 	
 *ELSEIF,DRtype,EQ,'fix'	
 	D_bl = 0.05
+
+	iDR = 2
+	ftyp='FOOTING'
+    *DIM,E_all,ARRAY,1000,1
+	*VREAD,E_all(1,1),'ANSYS_E_TEST2_X_SBAGM_V6_TR_DOE_1000','txt','fn_pre\RANDOM_INPUT\',jik,1,1000,1
+	(1x,E14.7)
+	*SET,E_bl, E_all(iDR,1)
 	
 	
 	!---------------------------------------------------------------------------!
@@ -115,7 +122,6 @@ DRtype = 'testing'
 	!/eof
 	!---------------------------------------------------------------------------!
 	!---------------------------------------------------------------------------!
-	
 	
 	/INPUT,'fn_analysis\Analysis_TranFunc_VH','mac'
 	!---------------------------------------------------------------------------!
@@ -157,11 +163,12 @@ DRtype = 'testing'
 
     !---------------------------Constraints for the LPM-------------------------!
     !/INPUT,'fn_pre\Pre_Load_BCs','mac'					
-	/eof
+	!/eof
 	!---------------------------------------------------------------------------!
 	!---------------------------------------------------------------------------!
 	
-	/INPUT,'fn_analysis\Analysis_Harmonic_SuperP','mac'
+	!/INPUT,'fn_analysis\Analysis_Harmonic_SuperP','mac'
+	/INPUT,'fn_analysis\Analysis_TranFunc_VH','mac'
     /INPUT,'fn_post\post_uni_Y_7pt5_TK_VaryD','mac'	
 
 *ENDIF

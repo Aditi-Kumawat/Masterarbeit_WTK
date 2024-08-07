@@ -2,8 +2,16 @@ clear;
 clc;
 close;
 
+%%
+% Step 1. fitting the recorded siganl (ACC) with Hu model.
+%
+%
+%%
+
+
+
 %path = load('events_Z.mat');
-path = load('All_events_record_Y.mat');
+path = load('All_events_record_Z.mat');
 %fit_type = 'Hu_S0_NoContraint';
 fit_type = 'Hu_S0';
 all_path = path.file_list;
@@ -27,7 +35,8 @@ for k = 1:length(path_all_events)
     [b,Fs] = fns_fft_data(a,100,false,false);
     if Fs/2 ==100     
         disp(num2str(k));
-        GMG = cls_GM_generator(a, 100);
+        
+        GMG = cls_GM_generator([], a, 100);
         
         [~,FRF_info,Time_info,GM_info] = GMG.generateTimeNonStaPesudoGMbyFit(fit_type,[150,0.7,0.5,GMG.PGA],[]); 
 
@@ -127,9 +136,8 @@ for k = 1:length(path_all_events)
     disp('---------------------------------------------------------------');
 end
 
-
 %a = fns_import_time_data(statictic_info_type2{1},'txt',[0,50]);
 %[b,Fs] = fns_fft_data(a,100,false,true);
-save('Statistic_info_type1_Y.mat','statictic_info_type1','-mat');
-save('Statistic_info_type2_Y.mat','statictic_info_type2','-mat');
+save('Statistic_info_type1_Z_ACC.mat','statictic_info_type1','-mat');
+save('Statistic_info_type2_Z_ACC.mat','statictic_info_type2','-mat');
 

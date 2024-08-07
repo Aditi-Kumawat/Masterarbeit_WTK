@@ -6,24 +6,24 @@ addpath("C:\Users\v196m\Desktop\master_project\Masterarbeit\GroundMotion\GroundM
 
 
 TEST_CASE = 1;
-NumDOE = 200;
+NumDOE = 1000;
 NumVar = 6;
 dir = 'Z';
 valid_point = 150;
 
-%Learning_type = 'TR';
-Learning_type = 'VAL';
+Learning_type = 'TR';
+%Learning_type = 'VAL';
 
 % Only use for output, irrelvent to input
-%output_type = "rand";
-output_type = "fix";
+output_type = "rand";
+%output_type = "fix";
 
 DOE_file_name = sprintf('TEST%d_X_SBAGM_V%d_%s_DOE_%d_DIR_%s.mat',TEST_CASE,NumVar,Learning_type,NumDOE,dir);
-DOE_path =['C:\Users\v196m\Desktop\master_project\Masterarbeit\StochasticPCE\InputData\',DOE_file_name];
+DOE_path =['C:\Users\v196m\Desktop\master_project\Masterarbeit\TESTING_ENV\InputData\',DOE_file_name];
 X = load(DOE_path);
 
 if strcmp(output_type, 'rand')
-    output_file_name = sprintf('TEST%d_Y_SBAGM_V%d_%s_RAND_DOE_%d_DIR_%s.mat',TEST_CASE,NumVar,Learning_type,NumDOE,dir);
+    output_file_name = sprintf('TEST%d_Y_SBAGM_V%d_%s_RAND_DOE_%d_DIR_%s_5.mat',TEST_CASE,NumVar,Learning_type,NumDOE,dir);
 elseif strcmp(output_type, 'fix')
     output_file_name = sprintf('TEST%d_Y_SBAGM_V%d_%s_FIX%d_DOE_%d_DIR_%s.mat',TEST_CASE,NumVar,Learning_type,valid_point,NumDOE,dir);
 end
@@ -141,7 +141,8 @@ if strcmp(output_type,"rand")
     X_rand.Wb = 12+1*X.X(:,5);
     X_rand.beta = exp(-3.2+0.1*X.X(:,6));
     Y = SDOF_simulation(X_rand);
-    save(output_path ,'Y','-mat');
+
+    %save(output_path ,'Y','-mat');
 
 
 elseif strcmp(output_type,"fix")
@@ -156,8 +157,14 @@ elseif strcmp(output_type,"fix")
     X_valid.beta = exp(-3.2+0.1*Valid_point_1(:,6));
 
     Y = SDOF_simulation(X_valid);
-    save(output_path ,'Y','-mat');
+    %save(output_path ,'Y','-mat');
 end
+
+figure 
+histogram(Y,'Normalization','probability','FaceColor',[0 0.4470 0.7410]);
+xlabel('log($v_{max}$) (mm/s)', 'Interpreter', 'latex')
+ylabel('Normalized frequency', 'Interpreter', 'latex');
+grid on 
 
 
 
@@ -170,7 +177,7 @@ function Y = SDOF_simulation(X)
        % W_c_ratio ~ LogNormal(-1.2,0.4)
        % Wn ~ Normal(12,1)
 
-       PGA = exp(X.lnPGA);
+       PGA = 1000*exp(X.lnPGA);
        W_g = 2*pi*X.Wg;
        beta = X.DRg;
        W_c_ratio = X.Wc;

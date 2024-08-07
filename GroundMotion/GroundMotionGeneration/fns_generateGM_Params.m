@@ -18,8 +18,8 @@ function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_arr
     %% Output data:
     %   1.output_GM       : Output table, time(var1) = Time series,
     %                                     ampl(var2) = Amplitude.
-    addpath('BaselineCorrection\');
-
+    %addpath('BaselineCorrection\');
+    addpath("C:\Users\v196m\Desktop\master_project\Masterarbeit\GroundMotion\GroundMotionGeneration\BaselineCorrection")
     %%Initialized Seed for White Noise
     %if isempty(seed)
     %    rng('shuffle');
@@ -80,8 +80,20 @@ function [time, accel_A3, vel_A3, disp_A3] = fns_generateGM_Params(seed,Time_arr
     %Baseline correction
     %[~, disp] = newmarkIntegrate(time, ampl, 0.5, 0.25);
     %[DR, AR] = computeDriftRatio(time, disp, 'ReferenceAccel', ampl);
+
     
     [accel_A3, vel_A3, disp_A3] = baselineCorrection(time, ampl, 'AccelFitOrder', 3);  
+
+
+    
+    %plot(time,disp,'LineWidth', 1)
+    %hold on
+    %plot(time,disp_A3,'LineWidth', 1)
+    %yline(0,'-.k', 'LineWidth', 1)
+    %legend('Before baseline correction', 'After baseline correction')
+    %xlabel('Time (sec)', 'Interpreter', 'latex')
+    %ylabel('Displacement (mm)', 'Interpreter', 'latex')
+
     %[A3DR, A3AR] = computeDriftRatio(time, disp_A3, 'ReferenceAccel', ampl);=
     
 end

@@ -21,7 +21,7 @@ Model = SPCE.StochasticPCE(config_file_path, numDOE= None)
 Y = sio.loadmat(Y_path)
 Realization = np.array([Y["Y"]])[0]
 Model.InputRealization(Realization)
-Model.BuildModel_SPCE(tol_err=1E-8, show_info_ = False, overfit_count_ = 100,  save_result_ = True, result_path_ = save_dir)
+#Model.BuildModel_SPCE(tol_err=1E-8, show_info_ = False, overfit_count_ = 100,  save_result_ = True, result_path_ = save_dir)
 
 #Model.BuildModel_SPCE(tol_err=1E-8, show_info_ = False, overfit_count_ = 100,  save_result_ = True, result_path_ = save_dir)
 # 1st try 4, 0.75

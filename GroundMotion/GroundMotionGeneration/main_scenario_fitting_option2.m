@@ -102,10 +102,10 @@ VarsTable(107,:) = [];
 VarsTable(105,:) = [];
 
 
-LME_lnPGA = fitlme(VarsTable,'lnPGA ~  M + LnD + LnR  + Wg + (LnR|Event) +  ( Wg|Event)');
-LME_lnWc = fitlme(VarsTable, 'Wc     ~ R +  Wg + ( R|Event)+  ( Wg|Event)');
+LME_lnPGA = fitlme(VarsTable,'lnPGA ~  M + LnD + LnR  + Wg + (LnR|Event) +  ( Wg|Event)')
+LME_lnWc = fitlme(VarsTable, 'Wc     ~ R + D +  Wg + ( R|Event)+  ( Wg|Event)')
 % Beta should be fixed 
-LME_lnBeta = fitlme(VarsTable,'DRg  ~  R +  Wg + ( R|Event)+  ( Wg|Event)');
+LME_lnBeta = fitlme(VarsTable,'DRg  ~  R + D+   Wg + ( R|Event)+  ( Wg|Event)')
 
 %% Residuals and correaltion 
 % Concatenate the residuals into a single matrix
@@ -140,7 +140,7 @@ disp(chol_matrix);
 
 
 
-%fns_plotResidual_events(LME_lnBeta)
+
 %fns_visualized_fitting(LME_lnPGA, VarsTable, VarsTable.lnPGA, [0.5, 1, 1.5, 1.2, 0.5], [7.0, 9.5, 12.0, 8.0, 10])
 
 
@@ -164,41 +164,41 @@ save("X_SBAGM_PredDOE_1000.mat","X_rand");
 %save("X_SBAGM_TrDOE_1000.mat","X_rand");
 
 % Validation point 200
-Pesuedo_M = exp(-0.378+ 0.53*Valid_point_1(:,1));
-Pesuedo_R = 8.5+ 2.2*Valid_point_1(:,2);
-Pesuedo_Wg = exp(2.76+ 0.37*Valid_point_1(:,3));
-X_valid_200 = fns_generateTable_Scenario(LME_lnPGA,LME_lnWc,Pesuedo_M,Pesuedo_R,Pesuedo_Wg,0.3);
-X_valid_200.Wb = 12+1*Valid_point_1(:,4);
-save("X_SBAGM_PredDOE_200_1000.mat","X_valid_200");
+%Pesuedo_M = exp(-0.378+ 0.53*Valid_point_1(:,1));
+%Pesuedo_R = 8.5+ 2.2*Valid_point_1(:,2);
+%Pesuedo_Wg = exp(2.76+ 0.37*Valid_point_1(:,3));
+%X_valid_200 = fns_generateTable_Scenario(LME_lnPGA,LME_lnWc,Pesuedo_M,Pesuedo_R,Pesuedo_Wg,0.3);
+%X_valid_200.Wb = 12+1*Valid_point_1(:,4);
+%save("X_SBAGM_PredDOE_200_1000.mat","X_valid_200");
 %save("X_SBAGM_TrDOE_200_1000.mat","X_valid_200");
 
 
 % Validation point 400
-Pesuedo_M = exp(-0.378+ 0.53*Valid_point_2(:,1));
-Pesuedo_R = 8.5+ 2.2*Valid_point_2(:,2);
-Pesuedo_Wg = exp(2.76+ 0.37*Valid_point_2(:,3));
-X_valid_400 = fns_generateTable_Scenario(LME_lnPGA,LME_lnWc,Pesuedo_M,Pesuedo_R,Pesuedo_Wg,0.3);
-X_valid_400.Wb = 12+1*Valid_point_2(:,4);
-save("X_SBAGM_PredDOE_400_1000.mat","X_valid_400");
+%Pesuedo_M = exp(-0.378+ 0.53*Valid_point_2(:,1));
+%Pesuedo_R = 8.5+ 2.2*Valid_point_2(:,2);
+%Pesuedo_Wg = exp(2.76+ 0.37*Valid_point_2(:,3));
+%X_valid_400 = fns_generateTable_Scenario(LME_lnPGA,LME_lnWc,Pesuedo_M,Pesuedo_R,Pesuedo_Wg,0.3);
+%X_valid_400.Wb = 12+1*Valid_point_2(:,4);
+%save("X_SBAGM_PredDOE_400_1000.mat","X_valid_400");
 %save("X_SBAGM_TrDOE_400_1000.mat","X_valid_400");
 
 
 % Validation point 600
-Pesuedo_M = exp(-0.378+ 0.53*Valid_point_3(:,1));
-Pesuedo_R = 8.5+ 2.2*Valid_point_3(:,2);
-Pesuedo_Wg = exp(2.76+ 0.37*Valid_point_3(:,3));
-X_valid_600 = fns_generateTable_Scenario(LME_lnPGA,LME_lnWc,Pesuedo_M,Pesuedo_R,Pesuedo_Wg,0.3);
-X_valid_600.Wb = 12+1*Valid_point_3(:,4);
-save("X_SBAGM_PredDOE_600_1000.mat","X_valid_600");
+%Pesuedo_M = exp(-0.378+ 0.53*Valid_point_3(:,1));
+%Pesuedo_R = 8.5+ 2.2*Valid_point_3(:,2);
+%Pesuedo_Wg = exp(2.76+ 0.37*Valid_point_3(:,3));
+%X_valid_600 = fns_generateTable_Scenario(LME_lnPGA,LME_lnWc,Pesuedo_M,Pesuedo_R,Pesuedo_Wg,0.3);
+%X_valid_600.Wb = 12+1*Valid_point_3(:,4);
+%save("X_SBAGM_PredDOE_600_1000.mat","X_valid_600");
 %save("X_SBAGM_TrDOE_600_1000.mat","X_valid_600");
 
 % Validation point 800
-Pesuedo_M = exp(-0.378+ 0.53*Valid_point_4(:,1));
-Pesuedo_R = 8.5+ 2.2*Valid_point_4(:,2);
-Pesuedo_Wg = exp(2.76+ 0.37*Valid_point_4(:,3));
-X_valid_800 = fns_generateTable_Scenario(LME_lnPGA,LME_lnWc,Pesuedo_M,Pesuedo_R,Pesuedo_Wg,0.3);
-X_valid_800.Wb = 12+1*Valid_point_4(:,4);
-save("X_SBAGM_PredDOE_800_1000.mat","X_valid_800");
+%Pesuedo_M = exp(-0.378+ 0.53*Valid_point_4(:,1));
+%Pesuedo_R = 8.5+ 2.2*Valid_point_4(:,2);
+%Pesuedo_Wg = exp(2.76+ 0.37*Valid_point_4(:,3));
+%X_valid_800 = fns_generateTable_Scenario(LME_lnPGA,LME_lnWc,Pesuedo_M,Pesuedo_R,Pesuedo_Wg,0.3);
+%X_valid_800.Wb = 12+1*Valid_point_4(:,4);
+%save("X_SBAGM_PredDOE_800_1000.mat","X_valid_800");
 %save("X_SBAGM_TrDOE_800_1000.mat","X_valid_800");
 
 %

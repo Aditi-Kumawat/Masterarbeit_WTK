@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-dir = 'Y';
+dir = 'Z';
 file_name = ['Statistic_info_type1_',dir,'.mat'];
 path = load(file_name);
 data = path.statictic_info_type1;
@@ -15,7 +15,7 @@ i_len = Spectral_info{:,1};
 j_len = Time_info{:,1};
 k_len = GM_info{:,1};
 
-cd SAVE_FIGS\FIGS_HISTO_Y_type1\
+%cd SAVE_FIGS\FIGS_HISTO_Z_type1\
 
 for i = 1:length(i_len)
     h = histogram(cellfun(@(x) x(i),Spectral_info),100);
@@ -36,9 +36,9 @@ for i = 1:length(i_len)
         xlabel('S0');
         save_name = ['Histogram_',dir,'_VaryS0_S0'];
     end
-    savefig([save_name,'fig']);
-    saveas(gcf, save_name, 'jpg');
-    close;
+    %savefig([save_name,'fig']);
+    %saveas(gcf, save_name, 'jpg');
+    %close;
 end
 
 for j = 1:length(j_len)
@@ -60,9 +60,9 @@ for j = 1:length(j_len)
         xlabel('Duration (sec)')
         save_name = ['Histogram_',dir,'_VaryS0_duration_g'];
     end
-    savefig([save_name,'fig']);
-    saveas(gcf, save_name, 'jpg');
-    close;
+    %savefig([save_name,'fig']);
+    %saveas(gcf, save_name, 'jpg');
+    %close;
 end
 
 for k = 1:length(k_len)-1
@@ -76,10 +76,10 @@ for k = 1:length(k_len)-1
         xlabel('Record time (sec)')
         save_name = ['Histogram_',dir,'_VaryS0_recordT_g'];
     end
-    savefig([save_name,'fig']);
-    saveas(gcf, save_name, 'jpg');
-    close;
+    %savefig([save_name,'fig']);
+    %saveas(gcf, save_name, 'jpg');
+    %close;
 end
 
-cd .. 
-cd ..
+%cd .. 
+%cd ..

@@ -139,6 +139,14 @@ classdef cls_GM_generator
                 title('Band-Limited White Gaussian Noise');
                 xlabel('Time (seconds)');
                 ylabel('Amplitude');
+                
+                figure;
+                plot(obj.Time, noise);
+                %title('Step 1Band-Limited White Gaussian Noise');
+                xlabel('Time (seconds)', Interpreter='latex');
+                ylabel('Amplitude', Interpreter='latex');
+                grid on
+
             end
         end
 
@@ -180,7 +188,7 @@ classdef cls_GM_generator
             filter = GMmodel(obj,GM_model,coeffs);
 
             %Generate white noise
-            noise = obj.generateWhiteNoise;
+            noise = obj.generateWhiteNoise(plot_);
             noise_FFT = fft(noise);
             P1 = noise_FFT(1:floor(length(noise)/2+1));
             freq = obj.Fs*(0:(length(noise)/2))/length(noise);
@@ -217,25 +225,35 @@ classdef cls_GM_generator
                 if plot_
                     figure;
                     plot(obj.Time,data_IFFT);
-                    title('Pesudo Ground Motion in time-domain');
-                    xlabel('time (s)');
-                    ylabel('Amplitude');  
+                    %title('Pesudo Ground Motion in time-domain');
+                    xlabel('Time (sec)', Interpreter='latex');
+                    ylabel('Amplitude', Interpreter='latex'); 
+                    grid on
 
                     figure;
-                    plot(freq,abs(FRF));
+                    plot(freq,abs(P1));
+                    %title('Pesudo Ground Motion in time-domain');
+                    xlabel('Frequency (Hz)', Interpreter='latex');
+                    ylabel('Amplitude', Interpreter='latex');
+                    grid on
+
+                    figure;
+                    plot(freq,abs(FRF),'LineWidth',1);
                     hold on 
-                    plot(freq,real(FRF));
-                    plot(freq,imag(FRF));
-                    title('Fitting result');
-                    xlabel('Freq (Hz)');
-                    ylabel('Frequency Response Function (Hz)');
-                    legend("abs", "real", 'imag');
+                    plot(freq,real(FRF),'--');
+                    plot(freq,imag(FRF),'-.');
+                    %title('Fitting result');
+                    xlabel('Frequency (Hz)', Interpreter='latex');
+                    ylabel('FRF', Interpreter='latex');
+                    legend("Amplitude ", "Real", 'Imag', Interpreter='latex');
+                    grid on
 
                     figure;
                     plot(freq,abs(PesudoGM_freq));
-                    title('Unscaling Pesudo Ground Motion in freq-domain');
-                    xlabel('Freq (Hz)');
+                    %title('Unscaling Pesudo Ground Motion in freq-domain');
+                    xlabel('Frequency (Hz)');
                     ylabel('Amplitude');
+                    grid on
                 end
 
             catch exception
@@ -289,13 +307,53 @@ classdef cls_GM_generator
 
             if plot_
                 figure;
-                plot(obj.Time,obj.Ampl_t,'Color',[0.2, 0.4, 0.8, 0.5]);
+                plot(obj.Time,obj.Ampl_t,'Color',[0.9290 0.6940 0.1250, 0.8]);
                 hold on 
-                plot(obj.Time,ampl,'Color',[0.9290 0.6940 0.1250,0.3]);
-                title('Non-Stationary Pesudo Ground Motion in Time-domain');
-                xlabel('Time (s)');
-                ylabel('Amplitude');
-                legend("Recored Ground Motion","Non-Stationary Ground Motion");
+                plot(obj.Time,ampl,'Color',[0 0.4470 0.7410]);
+                
+                %title('Non-Stationary Pesudo Ground Motion in Time-domain');
+                xlabel('Time (sec)', Interpreter='latex');
+                ylabel('Amplitude', Interpreter='latex');
+                legend("Recored Ground Motion","Artificial Ground Motion", Interpreter='latex');
+                grid on
+                xlim([0,20])
+
+                figure;
+                plot(obj.Time,ampl);
+                %title('Non-Stationary Pesudo Ground Motion in Time-domain');
+                %hold on 
+                %plot(obj.Time,max(ampl)*q,'LineWidth',1);
+                xlabel('Time (sec)', Interpreter='latex');
+                ylabel('Amplitude', Interpreter='latex');
+                legend("Artificial Ground Motion", Interpreter='latex');
+                grid on
+                xlim([0,20])
+
+                figure;
+                plot(obj.Time,stationaryGM.ampl);
+                %title('Non-Stationary Pesudo Ground Motion in Time-domain');
+                hold on 
+                plot(obj.Time,max(stationaryGM.ampl)*q,'LineWidth',1);
+                xlabel('Time (sec)', Interpreter='latex');
+                ylabel('Amplitude', Interpreter='latex');
+                legend("Temporal stationary ground motion","Time modulating function", Interpreter='latex');
+                grid on
+                xlim([0,20])
+
+
+                figure;
+                plot(obj.Time,q,'LineWidth',1);
+                hold on
+                xline(1,'--r',{'$t_{0}$'},'LabelVerticalAlignment','middle', Interpreter='latex');
+                %xline(1,'--r','LabelVerticalAlignment'  ,'middle',{'$t_{0}$ = 1 sec'}, Interpreter='latex');
+                xline(2.5,'--r',{'$t_{5}$'}, 'LabelVerticalAlignment','middle',Interpreter='latex');
+                xline(4.785,'--r',{'$t_{mid}$'},'LabelVerticalAlignment','middle', Interpreter='latex');
+                xline(10,'--r',{'$t_{95}$'},'LabelVerticalAlignment','middle', Interpreter='latex');
+                xlabel('Time (sec)', Interpreter='latex');
+                ylabel('Amplitude', Interpreter='latex');
+                legend("Time modulating function", Interpreter='latex');
+                grid on
+                xlim([0,20])
             end
         end
 
@@ -409,7 +467,8 @@ classdef cls_GM_generator
             ub = [500,20,20,1];
 
             %options = optimoptions('lsqnonlin','Display','iter','FunctionTolerance',1e-16,'StepTolerance',1e-16);
-            options = optimoptions('lsqnonlin',FunctionTolerance = 1e-30, StepTolerance = 1e-30, OptimalityTolerance = 1e-20, MaxFunctionEvaluations = 1000);
+            %options = optimoptions('lsqnonlin',FunctionTolerance = 1e-30, StepTolerance = 1e-30, OptimalityTolerance = 1e-20, MaxFunctionEvaluations = 1000);
+            options = optimoptions('lsqnonlin',FunctionTolerance = 1e-6, StepTolerance = 1e-6, OptimalityTolerance = 1e-6, MaxFunctionEvaluations = 1000);
             x0 = init_Guess;
             [HuKT_coeffs,~,~,Flag,~] = lsqnonlin(fitting_fun,x0,lb,ub,options);
 
@@ -423,9 +482,9 @@ classdef cls_GM_generator
                 plot(rad_Freq,obj.PowerSpectrum);
                 hold on
                 plot(rad_Freq,plot_fun(HuKT_coeffs))
-                title('Fitting result');
-                xlabel('radius Freq');
-                ylabel('S(w)/S0');
+                %title('Fitting result');
+                xlabel('$\omega$ (rad/sec)', Interpreter='latex');
+                ylabel('$\bm{S}(\omega)/\bm{S}_{0}$');
                 legend("Scaling PowerSpectrum","fitted Hu-KT no constraint filter")
             end
         end
@@ -464,7 +523,8 @@ classdef cls_GM_generator
 
            
             %options = optimoptions('lsqnonlin','Display','iter','FunctionTolerance',1e-16,'StepTolerance',1e-16);
-            options = optimoptions('lsqnonlin','FunctionTolerance',1e-20,'StepTolerance',1e-20);
+            %options = optimoptions('lsqnonlin','FunctionTolerance',1e-20,'StepTolerance',1e-20);
+            options = optimoptions('lsqnonlin','FunctionTolerance',1e-6,'StepTolerance',1e-6);
             x0 = init_Guess;
             [CP_coeffs,~,~,Flag,~] = lsqnonlin(@fitting_fun,x0,lb,ub,options);
 
@@ -531,13 +591,14 @@ classdef cls_GM_generator
             
             if plot_
                 figure
-                plot(rad_Freq,obj.PowerSpectrum);
+                plot(rad_Freq,obj.PowerSpectrum,'Color', [0, 0.4470, 0.7410,0.8]);
                 hold on
-                plot(rad_Freq,plot_fun(HuKT_coeffs))
-                title('Fitting result');
-                xlabel('radius Freq');
-                ylabel('S(w)/S0');
-                legend("Scaling PowerSpectrum","fitted Hu-KT filter")
+                plot(rad_Freq,plot_fun(HuKT_coeffs),'LineWidth',1)
+                %title('Fitting result');
+                xlabel('$\omega$ (rad/sec)', Interpreter='latex');
+                ylabel('$\mathbf{S}(\omega)/\mathbf{S}_{0}$', Interpreter='latex');
+                legend("Scaling Power Spectrum","Fitted Hu-model ")
+                grid on
             end
         end
 
@@ -571,10 +632,10 @@ classdef cls_GM_generator
                 xline(time_percentiles(3),'c');
                 xline(time_percentiles(4),'m');
                 title('Cumulative Arias Intensity');
-                xlabel('Time (s)');
-                ylabel('Arias Intensity');
+                xlabel('Time (sec)', Interpreter='latex');
+                ylabel('Arias Intensity', Interpreter='latex');
                 legend("Cumlative AI","1 percentiles",...
-                    "5 percentiles","45 percentiles","99 percentiles");
+                    "5 percentiles","45 percentiles","99 percentiles", Interpreter='latex');
             end
         end
 
