@@ -43,7 +43,7 @@ ylim([0.001,1])
 set(gca, 'XTick', 1:length(categories), 'XTickLabel', categories); % Set X-axis labels
 xlabel('$N$', 'Interpreter', 'latex'); % X-axis label
 %title('p = 4, q = 1'); % Title
-legend('Average error (sec) ', 'Location', 'Best', 'Interpreter', 'latex'); % Legend
+legend('Average error', 'Location', 'Best', 'Interpreter', 'latex'); % Legend
 
 % Adjust figure size (optional)
 %set(gcf, 'Position', [100, 100, 800, 600]); % Adjust figure size
